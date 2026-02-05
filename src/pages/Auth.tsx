@@ -6,9 +6,11 @@
  import { Label } from "@/components/ui/label";
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
  import { toast } from "@/components/ui/sonner";
-import { Sparkles, Leaf, Play, ArrowRight } from "lucide-react";
+import { Sparkles, Leaf, ArrowRight } from "lucide-react";
 import beforeRoom from "@/assets/before-room.jpg";
 import afterRoom from "@/assets/after-room.jpg";
+import beforeBedroom from "@/assets/before-bedroom.jpg";
+import afterBedroom from "@/assets/after-bedroom.jpg";
  
  const Auth = () => {
    const navigate = useNavigate();
@@ -56,60 +58,90 @@ import afterRoom from "@/assets/after-room.jpg";
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-accent/10 p-8 items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
         
-        <div className="relative z-10 max-w-lg w-full space-y-8">
+        <div className="relative z-10 max-w-2xl w-full space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">See the Transformation</h2>
+            <h2 className="text-2xl font-bold text-foreground">See the Transformations</h2>
             <p className="text-muted-foreground">From overwhelm to calm, one micro-challenge at a time</p>
            </div>
           
-          {/* Before/After Showcase */}
-          <div className="relative">
-            {/* Before Image */}
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/50">
-              <img 
-                src={beforeRoom} 
-                alt="Cluttered room before TidyMind" 
-                className="w-full aspect-[4/3] object-cover"
-              />
-              <div className="absolute bottom-3 left-3 bg-destructive/90 text-destructive-foreground text-xs font-medium px-3 py-1.5 rounded-full">
-                Before
+          {/* Before/After Showcase - Two Rooms */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Living Room Transformation */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-center text-muted-foreground">Living Room</h3>
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-border/50">
+                <img 
+                  src={beforeRoom} 
+                  alt="Cluttered living room" 
+                  className="w-full aspect-[4/3] object-cover"
+                />
+                <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
+                  Before
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <div className="w-6 h-6 rounded-full bg-primary/80 flex items-center justify-center">
+                  <ArrowRight className="w-3 h-3 text-primary-foreground rotate-90" />
+                </div>
+              </div>
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-primary/30">
+                <img 
+                  src={afterRoom} 
+                  alt="Organized living room" 
+                  className="w-full aspect-[4/3] object-cover"
+                />
+                <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  After
+                </div>
               </div>
             </div>
             
-            {/* Arrow */}
-            <div className="flex justify-center my-4">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                <ArrowRight className="w-5 h-5 text-primary-foreground rotate-90" />
+            {/* Bedroom Transformation */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-center text-muted-foreground">Bedroom</h3>
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-border/50">
+                <img 
+                  src={beforeBedroom} 
+                  alt="Cluttered bedroom" 
+                  className="w-full aspect-[4/3] object-cover"
+                />
+                <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
+                  Before
+                </div>
               </div>
-            </div>
-            
-            {/* After Image */}
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary/30">
-              <img 
-                src={afterRoom} 
-                alt="Organized room after TidyMind" 
-                className="w-full aspect-[4/3] object-cover"
-              />
-              <div className="absolute bottom-3 right-3 bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                After
+              <div className="flex justify-center">
+                <div className="w-6 h-6 rounded-full bg-primary/80 flex items-center justify-center">
+                  <ArrowRight className="w-3 h-3 text-primary-foreground rotate-90" />
+                </div>
+              </div>
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-primary/30">
+                <img 
+                  src={afterBedroom} 
+                  alt="Organized bedroom" 
+                  className="w-full aspect-[4/3] object-cover"
+                />
+                <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  After
+                </div>
               </div>
             </div>
           </div>
           
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 pt-4">
-            <div className="text-center p-3 rounded-xl bg-background/50 backdrop-blur-sm">
-              <div className="text-2xl font-bold text-primary">5 min</div>
+          <div className="grid grid-cols-3 gap-4 pt-2">
+            <div className="text-center p-2.5 rounded-xl bg-background/50 backdrop-blur-sm">
+              <div className="text-xl font-bold text-primary">5 min</div>
               <div className="text-xs text-muted-foreground">Micro-tasks</div>
             </div>
-            <div className="text-center p-3 rounded-xl bg-background/50 backdrop-blur-sm">
-              <div className="text-2xl font-bold text-primary">AI</div>
+            <div className="text-center p-2.5 rounded-xl bg-background/50 backdrop-blur-sm">
+              <div className="text-xl font-bold text-primary">AI</div>
               <div className="text-xs text-muted-foreground">Powered</div>
             </div>
-            <div className="text-center p-3 rounded-xl bg-background/50 backdrop-blur-sm">
-              <div className="text-2xl font-bold text-primary">ADHD</div>
+            <div className="text-center p-2.5 rounded-xl bg-background/50 backdrop-blur-sm">
+              <div className="text-xl font-bold text-primary">ADHD</div>
               <div className="text-xs text-muted-foreground">Friendly</div>
             </div>
           </div>
@@ -121,13 +153,21 @@ import afterRoom from "@/assets/after-room.jpg";
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile Header with mini showcase */}
           <div className="lg:hidden mb-6">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-12 h-12 rounded-xl overflow-hidden border border-destructive/30">
+            <div className="flex items-center justify-center gap-1.5 mb-4">
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-destructive/30">
                 <img src={beforeRoom} alt="Before" className="w-full h-full object-cover" />
               </div>
-              <ArrowRight className="w-4 h-4 text-primary" />
-              <div className="w-12 h-12 rounded-xl overflow-hidden border border-primary/30">
+              <ArrowRight className="w-3 h-3 text-primary" />
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/30">
                 <img src={afterRoom} alt="After" className="w-full h-full object-cover" />
+              </div>
+              <div className="w-2" />
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-destructive/30">
+                <img src={beforeBedroom} alt="Before" className="w-full h-full object-cover" />
+              </div>
+              <ArrowRight className="w-3 h-3 text-primary" />
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/30">
+                <img src={afterBedroom} alt="After" className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
@@ -223,25 +263,6 @@ import afterRoom from "@/assets/after-room.jpg";
                     : "Already have an account? Sign in"}
                 </button>
               </div>
- 
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12"
-                onClick={() => navigate("/demo")}
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Try One Room as a Guest
-              </Button>
             </CardContent>
           </Card>
 
