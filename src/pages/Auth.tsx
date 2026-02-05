@@ -66,65 +66,65 @@ import afterBedroom from "@/assets/after-bedroom.jpg";
            </div>
           
           {/* Before/After Showcase - Two Rooms */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-5">
             {/* Living Room Transformation */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-center text-muted-foreground">Living Room</h3>
-              <div className="relative rounded-xl overflow-hidden shadow-lg border border-border/50">
-                <img 
-                  src={beforeRoom} 
-                  alt="Cluttered living room" 
-                  className="w-full aspect-[4/3] object-cover"
-                />
-                <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
-                  Before
+            <div className="space-y-2">
+              <h3 className="text-xs font-medium text-muted-foreground">Living Room</h3>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 rounded-xl overflow-hidden shadow-lg border border-border/50">
+                  <img 
+                    src={beforeRoom} 
+                    alt="Cluttered living room" 
+                    className="w-full aspect-[4/3] object-cover"
+                  />
+                  <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
+                    Before
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-center">
-                <div className="w-6 h-6 rounded-full bg-primary/80 flex items-center justify-center">
-                  <ArrowRight className="w-3 h-3 text-primary-foreground rotate-90" />
+                <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center shrink-0">
+                  <ArrowRight className="w-4 h-4 text-primary-foreground" />
                 </div>
-              </div>
-              <div className="relative rounded-xl overflow-hidden shadow-lg border border-primary/30">
-                <img 
-                  src={afterRoom} 
-                  alt="Organized living room" 
-                  className="w-full aspect-[4/3] object-cover"
-                />
-                <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5" />
-                  After
+                <div className="relative flex-1 rounded-xl overflow-hidden shadow-lg border border-primary/30">
+                  <img 
+                    src={afterRoom} 
+                    alt="Organized living room" 
+                    className="w-full aspect-[4/3] object-cover"
+                  />
+                  <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    After
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* Bedroom Transformation */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-center text-muted-foreground">Bedroom</h3>
-              <div className="relative rounded-xl overflow-hidden shadow-lg border border-border/50">
-                <img 
-                  src={beforeBedroom} 
-                  alt="Cluttered bedroom" 
-                  className="w-full aspect-[4/3] object-cover"
-                />
-                <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
-                  Before
+            <div className="space-y-2">
+              <h3 className="text-xs font-medium text-muted-foreground">Bedroom</h3>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 rounded-xl overflow-hidden shadow-lg border border-border/50">
+                  <img 
+                    src={beforeBedroom} 
+                    alt="Cluttered bedroom" 
+                    className="w-full aspect-[4/3] object-cover"
+                  />
+                  <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
+                    Before
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-center">
-                <div className="w-6 h-6 rounded-full bg-primary/80 flex items-center justify-center">
-                  <ArrowRight className="w-3 h-3 text-primary-foreground rotate-90" />
+                <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center shrink-0">
+                  <ArrowRight className="w-4 h-4 text-primary-foreground" />
                 </div>
-              </div>
-              <div className="relative rounded-xl overflow-hidden shadow-lg border border-primary/30">
-                <img 
-                  src={afterBedroom} 
-                  alt="Organized bedroom" 
-                  className="w-full aspect-[4/3] object-cover"
-                />
-                <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5" />
-                  After
+                <div className="relative flex-1 rounded-xl overflow-hidden shadow-lg border border-primary/30">
+                  <img 
+                    src={afterBedroom} 
+                    alt="Organized bedroom" 
+                    className="w-full aspect-[4/3] object-cover"
+                  />
+                  <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    After
+                  </div>
                 </div>
               </div>
             </div>
