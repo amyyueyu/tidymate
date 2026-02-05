@@ -18,8 +18,10 @@
    Star,
    Clock,
    Trophy,
-   Sparkles
+   Sparkles,
+   Eye
  } from "lucide-react";
+ import VisionComparison from "@/components/VisionComparison";
  
  interface Challenge {
    id: string;
@@ -54,6 +56,7 @@
    const [timerActive, setTimerActive] = useState(false);
    const [timeRemaining, setTimeRemaining] = useState(0);
    const [loading, setLoading] = useState(true);
+   const [showVision, setShowVision] = useState(false);
  
    useEffect(() => {
      if (!authLoading && !user) {
@@ -256,6 +259,28 @@
  
        {/* Main Content */}
        <main className="flex-1 container max-w-2xl mx-auto px-4 py-6 flex flex-col">
+         {/* Vision Toggle */}
+         {room.after_image_url && (
+           <Button
+             variant="outline"
+             className="mb-4 gap-2 animate-fade-in"
+             onClick={() => setShowVision(!showVision)}
+           >
+             <Eye className="w-4 h-4" />
+             {showVision ? "Hide Vision" : "See Your Vision"}
+           </Button>
+         )}
+ 
+         {/* Vision Comparison */}
+         {showVision && room.after_image_url && (
+           <div className="mb-6 animate-scale-in">
+             <VisionComparison
+               beforeImage={room.before_image_url}
+               afterImage={room.after_image_url}
+             />
+           </div>
+         )}
+ 
          {/* Timer */}
          <Card className="border-0 shadow-lg mb-6 animate-scale-in">
            <CardContent className="p-6 text-center">
