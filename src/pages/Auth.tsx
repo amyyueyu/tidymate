@@ -6,7 +6,7 @@
  import { Label } from "@/components/ui/label";
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
  import { toast } from "@/components/ui/sonner";
- import { Sparkles, Leaf } from "lucide-react";
+import { Sparkles, Leaf, Play } from "lucide-react";
  
  const Auth = () => {
    const navigate = useNavigate();
@@ -142,6 +142,25 @@
                    : "Already have an account? Sign in"}
                </button>
              </div>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12"
+                onClick={() => navigate("/demo")}
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Try Demo First
+              </Button>
            </CardContent>
          </Card>
  
