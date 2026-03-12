@@ -21,30 +21,25 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Fetch the original room image and convert to a Blob for multipart upload
-    const imageRes = await fetch(imageUrl);
-    if (!imageRes.ok) {
-      throw new Error(`Failed to fetch source image: ${imageRes.status}`);
-    }
-    const imageBlob = await imageRes.blob();
-    const contentType = imageBlob.type || "image/jpeg";
-    const extension = contentType.split("/")[1] || "jpg";
-
-    // Build multipart form data for gpt-image-1 edits endpoint
-    const formData = new FormData();
-    formData.append("model", "gpt-image-1");
-    formData.append("prompt", VISION_PROMPT);
-    formData.append("image[]", new File([imageBlob], `room.${extension}`, { type: contentType }));
-    formData.append("n", "1");
-    formData.append("size", "1024x1024");
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/images/edits", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        // Do NOT set Content-Type — browser/fetch sets it automatically with the boundary
+        "Content-Type": "application/json",
       },
-      body: formData,
+      body: JSON.stringify({
+        model: "google/gemini-3.1-flash-image-preview",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: VISION_PROMPT },
+              { type: "image_url", image_url: { url: imageUrl } },
+            ],
+          },
+        ],
+        modalities: ["image", "text"],
+      }),
     });
 
     if (!response.ok) {
@@ -66,20 +61,17 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    // gpt-image-1 returns base64 by default; url if output_format requested
-    const imageData = data.data?.[0];
-    if (!imageData) {
-      throw new Error("No image returned from gpt-image-1");
-    }
+    const generatedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const message = data.choices?.[0]?.message?.content;
 
-    const generatedImageUrl = imageData.url
-      ? imageData.url
-      : `data:image/png;base64,${imageData.b64_json}`;
+    if (!generatedImage) {
+      throw new Error("No image generated");
+    }
 
     return new Response(
       JSON.stringify({
-        imageUrl: generatedImageUrl,
-        message: "Here's your vision for the transformed space!",
+        imageUrl: generatedImage,
+        message: message || "Here's your vision for the transformed space!",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
