@@ -73,6 +73,8 @@ const ChallengePage = () => {
   const [loading, setLoading] = useState(true);
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [beforeImageUrl, setBeforeImageUrl] = useState<string | null>(null);
+  const [loadingBeforeImage, setLoadingBeforeImage] = useState(false);
 
   // Refs to avoid stale closures in timer and to gate guest hydration
   const challengesRef = useRef<Challenge[]>([]);
