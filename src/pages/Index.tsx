@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,11 +18,20 @@ import {
   Sparkles
 } from "lucide-react";
 
+const GREETINGS = [
+  "No pressure. Even 10 minutes counts.",
+  "Your space, your pace.",
+  "Let's just make it a tiny bit better.",
+  "You showed up. That's the hard part.",
+  "Small wins are still wins.",
+];
+
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const [activeRooms, setActiveRooms] = useState<any[]>([]);
+  const greeting = useMemo(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)], []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -61,8 +70,15 @@ const Index = () => {
 
   if (!user || !profile) return null;
 
-  const levelProgress = (profile.total_points % 100);
+  const levelProgress = profile.total_points % 100;
   const pointsToNextLevel = 100 - levelProgress;
+
+  const streakMessage =
+    profile.current_streak === 0
+      ? "Every journey starts somewhere. Today's a good day."
+      : profile.current_streak <= 3
+      ? "You're building something real."
+      : "Look at you showing up consistently. 🔥";
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,7 +102,7 @@ const Index = () => {
             Hey, {profile.display_name || "friend"}! 👋
           </h1>
           <p className="text-muted-foreground mt-1">
-            Ready to transform a space today?
+            {greeting}
           </p>
         </div>
 
@@ -191,7 +207,7 @@ const Index = () => {
         <Card className="border-0 shadow-sm bg-accent/20 animate-fade-in" style={{ animationDelay: "0.5s" }}>
           <CardContent className="p-4 text-center">
             <p className="text-sm text-accent-foreground">
-              💪 Small steps lead to big transformations. You've got this!
+              💪 {streakMessage}
             </p>
           </CardContent>
         </Card>
