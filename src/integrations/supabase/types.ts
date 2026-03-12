@@ -212,7 +212,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_challenge_add_points: {
+        Args: { p_challenge_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
