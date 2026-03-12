@@ -25,6 +25,7 @@ interface GuestModeContextValue {
   isGuest: boolean;
   guestRoom: GuestRoom | null;
   guestChallenges: GuestChallenge[];
+  startGuestMode: () => void;
   setGuestSession: (room: GuestRoom, challenges: GuestChallenge[]) => void;
   updateGuestChallenge: (id: string, updates: Partial<GuestChallenge>) => void;
   updateGuestRoom: (updates: Partial<GuestRoom>) => void;
