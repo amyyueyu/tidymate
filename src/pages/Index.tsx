@@ -87,8 +87,7 @@ const Index = () => {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="container max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Leaf className="w-6 h-6 text-primary" />
-            <span className="font-semibold text-lg">TidyMate</span>
+            <img src={tidymateLogo} alt="TidyMate" className="h-8 w-auto" />
           </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={() => navigate("/stats")}>
