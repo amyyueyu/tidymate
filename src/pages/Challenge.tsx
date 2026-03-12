@@ -185,9 +185,11 @@ const ChallengePage = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-
+  const completeChallenge = async () => {
     if (!currentChallenge || !room) return;
+    stopInterval();
     setTimerActive(false);
+
 
     const newCompletedCount = completedCount + 1;
     const isLast = currentChallengeIndex === challenges.length - 1;
