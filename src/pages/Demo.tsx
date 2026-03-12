@@ -8,22 +8,23 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import VisionComparison from "@/components/VisionComparison";
 import { supabase } from "@/integrations/supabase/client";
- import {
-   ArrowLeft,
+import {
+  ArrowLeft,
   Camera,
-   CheckCircle2,
-   Circle,
-   Clock,
-   Eye,
-   FastForward,
+  CheckCircle2,
+  Circle,
+  Clock,
+  Eye,
+  FastForward,
   ImagePlus,
-  Leaf,
-   Pause,
-   Play,
-   Sparkles,
-   Star,
-   UserPlus,
- } from "lucide-react";
+  Pause,
+  Play,
+  Sparkles,
+  Star,
+  UserPlus,
+} from "lucide-react";
+import logoIcon from "@/assets/logo-icon.png";
+import logoFull from "@/assets/logo-full.png";
  import { toast } from "@/components/ui/sonner";
  
 interface Challenge {

@@ -12,11 +12,11 @@ import {
   Camera,
   ArrowLeft,
   Sparkles,
-  Leaf,
   Clock,
   Trash2,
   Palette,
 } from "lucide-react";
+import logoIcon from "@/assets/logo-icon.png";
 
 type Intent = "tidy" | "declutter" | "redesign";
 

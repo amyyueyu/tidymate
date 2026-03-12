@@ -14,7 +14,6 @@ import {
   CartesianGrid,
 } from "recharts";
 import {
-  Leaf,
   ArrowLeft,
   Upload,
   CheckCircle2,
@@ -23,6 +22,7 @@ import {
   Layers,
   Trophy,
 } from "lucide-react";
+import logoIcon from "@/assets/logo-icon.png";
 
 type DailyRow = { day: string; uploads: number; completions: number };
 

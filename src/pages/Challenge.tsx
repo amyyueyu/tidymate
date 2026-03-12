@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
 import {
   ArrowLeft,
-  Leaf,
   Play,
   Pause,
   Check,
@@ -26,6 +25,7 @@ import {
   FastForward,
   UserPlus,
 } from "lucide-react";
+import logoIcon from "@/assets/logo-icon.png";
 import VisionComparison from "@/components/VisionComparison";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";

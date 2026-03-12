@@ -13,11 +13,12 @@ import {
   Star, 
   Trophy, 
   LogOut,
-  Leaf,
   ArrowRight,
   Sparkles,
   BarChart2
 } from "lucide-react";
+import logoFull from "@/assets/logo-full.png";
+import logoIcon from "@/assets/logo-icon.png";
 
 const GREETINGS = [
   "No pressure. Even 10 minutes counts.",
