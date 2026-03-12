@@ -214,10 +214,10 @@ type DemoStep = "capture" | "analyzing" | "challenges" | "complete";
 
         <main className="container max-w-2xl mx-auto px-4 py-8">
           <div className="text-center mb-8 animate-fade-in">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-              <Leaf className="w-8 h-8 text-primary" />
+            <div className="inline-flex items-center justify-center mb-4">
+              <img src={logoFull} alt="TidyMate" className="h-14" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Try TidyMind Free</h1>
+            <h1 className="text-2xl font-bold mb-2">Try TidyMate Free</h1>
             <p className="text-muted-foreground">
               Capture one space and see how AI creates personalized challenges for you
             </p>
