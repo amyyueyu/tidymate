@@ -102,7 +102,7 @@ const Index = () => {
             Hey, {profile.display_name || "friend"}! 👋
           </h1>
           <p className="text-muted-foreground mt-1">
-            Ready to transform a space today?
+            {greeting}
           </p>
         </div>
 
