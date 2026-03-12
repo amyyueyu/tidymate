@@ -157,9 +157,11 @@ const ChallengePage = () => {
 
   const fetchRoomData = async () => {
     setLoading(true);
+    // Exclude before_image_url from the initial fetch — it can be a large base64 blob
+    // for legacy rooms and is only needed when viewing the VisionComparison component.
     const { data: roomData, error: roomError } = await supabase
       .from("rooms")
-      .select("*")
+      .select("id, name, intent, total_challenges, completed_challenges, status, after_image_url")
       .eq("id", roomId)
       .single();
 
