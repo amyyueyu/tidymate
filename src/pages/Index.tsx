@@ -207,7 +207,7 @@ const Index = () => {
         <Card className="border-0 shadow-sm bg-accent/20 animate-fade-in" style={{ animationDelay: "0.5s" }}>
           <CardContent className="p-4 text-center">
             <p className="text-sm text-accent-foreground">
-              💪 Small steps lead to big transformations. You've got this!
+              💪 {streakMessage}
             </p>
           </CardContent>
         </Card>
