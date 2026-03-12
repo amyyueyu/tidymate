@@ -1,78 +1,51 @@
 
+## Root Cause (confirmed)
 
-# TidyMind - ADHD-Friendly Declutter Assistant
+The challenge page is permanently stuck on "Loading challenges..." due to three compounding bugs in `Challenge.tsx`:
 
-## Overview
-An AI-powered app that transforms tidying and decluttering from overwhelming chores into dopamine-boosting, achievable challenges. Users photograph their spaces, and AI breaks down the chaos into fun, timed micro-tasks while showing them an inspiring vision of the outcome.
+**Bug 1 — Auth timing / `fetchRoomData` never called:**
+The `useEffect` dependency array is `[roomId, user, isGuest, guestRoom]`. On initial mount, `user` is `null` and `authLoading` is `true`, so the condition `!isGuest && roomId && user` is false — `fetchRoomData` is skipped. `loading` stays `true`. When `user` resolves, the effect re-runs. But there's a window where this fails silently if `authLoading` and `loading` are both true simultaneously.
 
----
+**Bug 2 — `.single()` triggers a hard redirect:**
+If the DB query returns no row (e.g. the row was *just* written and there's a brief propagation gap, or the `before_image_url` is a huge base64 blob that causes a timeout), `.single()` returns an error → `navigate("/")` fires → user is sent home. This explains why after uploading, the user ends up back at the start.
 
-## Core User Flow
-
-### 1. Onboarding & Sign Up
-- Simple account creation (email/password or Google sign-in)
-- Brief "What's your biggest challenge?" selector (tidying, decluttering, organizing)
-- Set notification preferences for gentle reminders
-
-### 2. Capture Your Space
-- Camera interface to photograph a messy area
-- Select intent: "Tidy Up" / "Declutter" / "Redesign"
-- Optional: Add context ("I have 15 minutes" or "Weekend project")
-
-### 3. AI Analysis & Vision
-- AI analyzes the image to identify items and clutter patterns
-- Generates an inspiring "after" visualization of the transformed space
-- Side-by-side before/after view to spark motivation
-
-### 4. Gamified Challenges
-- AI breaks the task into small, ADHD-friendly micro-challenges
-- Each challenge has:
-  - Clear, single-action instruction ("Clear the coffee table surface")
-  - Time estimate (5-10 min chunks)
-  - Optional timer for beat-the-clock mode
-  - Point value based on difficulty
-- Progress bar showing journey to completion
-
-### 5. Rewards & Progress
-- Points earned for each completed challenge
-- Daily streaks with gentle celebration
-- Level system unlocking achievement badges
-- Room transformation history gallery
+**Bug 3 — No `finally` / no safety net:**
+If `fetchRoomData` throws at any point before `setLoading(false)`, the spinner stays forever. There's no timeout or recovery mechanism.
 
 ---
 
-## Key Screens
+## Fix Plan
 
-| Screen | Purpose |
-|--------|---------|
-| **Home Dashboard** | Quick-start camera, streak counter, active challenges |
-| **Capture & Analyze** | Camera view with intent selector |
-| **Vision Board** | Before/after comparison with AI visualization |
-| **Challenge Mode** | Active task with timer, progress, encouragement |
-| **Progress Profile** | Points, level, badges, streak history, completed rooms |
+### Changes to `src/pages/Challenge.tsx` only
+
+**1. Replace `.single()` with `.maybeSingle()`**
+Prevents hard error when row isn't found yet. Instead, retry up to 3 times with a 600ms delay before giving up and showing a proper error message.
+
+**2. Add retry logic for room not found**
+```text
+fetchRoomData:
+  for attempt in [1, 2, 3]:
+    query room with .maybeSingle()
+    if found → fetch challenges → setLoading(false) → return
+    if not found and more attempts remain → wait 600ms → retry
+  after all retries fail → toast.error("Room not found") → navigate("/")
+```
+
+**3. Always call `setLoading(false)` via `finally`**
+Wrap the entire `fetchRoomData` body in a try/finally so loading never gets permanently stuck.
+
+**4. Add a safety timeout**
+Add a `useEffect` with a 12-second timeout: if `loading` is still true after 12 seconds, force `setLoading(false)` and show an error. This is a last-resort safety net.
+
+**5. Fix the auth-timing gap**
+Start `loading` as `false` and only set it to `true` when `fetchRoomData` is actually invoked. This ensures `authLoading` being `true` doesn't compound the stuck-spinner problem — the loading spinner only shows when a real fetch is in progress.
 
 ---
 
-## Design Philosophy
-- **Calm & minimal**: Soft, muted color palette with plenty of whitespace
-- **Low cognitive load**: One action per screen, clear visual hierarchy
-- **Encouraging tone**: Supportive microcopy ("You've got this!" not "You must...")
-- **Visual rewards**: Subtle animations for completions, not overwhelming
+## Summary of changes
 
----
+| File | Change |
+|---|---|
+| `src/pages/Challenge.tsx` | `.single()` → `.maybeSingle()`, retry loop, try/finally, safety timeout, loading state init fix |
 
-## Technical Approach
-- **Backend**: Lovable Cloud for authentication, database (user profiles, challenges, progress)
-- **AI**: Lovable AI for image analysis and generating personalized challenges
-- **Image Generation**: AI-powered before/after visualization using the image generation model
-- **Mobile-optimized**: Responsive design that works great on phones for easy photo capture
-
----
-
-## MVP Scope Summary
-✅ User accounts with progress persistence  
-✅ Photo capture and AI room analysis  
-✅ Before/after transformation visualization  
-✅ Gamified micro-challenges with timers  
-✅ Points, levels, and streak tracking  
-
+No backend changes needed — all fixes are frontend logic only.
