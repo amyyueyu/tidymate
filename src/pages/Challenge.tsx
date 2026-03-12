@@ -233,7 +233,7 @@ const ChallengePage = () => {
         .from("challenges")
         .update({ status: "completed", completed_at: new Date().toISOString() })
         .eq("id", currentChallenge.id);
-      await addPoints(currentChallenge.points);
+      await addPoints(currentChallenge.points, currentChallenge.id);
       await supabase
         .from("rooms")
         .update({
