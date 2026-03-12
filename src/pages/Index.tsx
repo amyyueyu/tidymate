@@ -71,7 +71,7 @@ const Index = () => {
         <div className="container max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Leaf className="w-6 h-6 text-primary" />
-            <span className="font-semibold text-lg">TidyMind</span>
+            <span className="font-semibold text-lg">TidyMate</span>
           </div>
           <Button variant="ghost" size="icon" onClick={signOut}>
             <LogOut className="w-5 h-5" />
