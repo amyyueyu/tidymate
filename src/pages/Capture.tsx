@@ -35,8 +35,10 @@ const Capture = () => {
   const [roomId, setRoomId] = useState<string | null>(null);
 
   // Auth guard — allow guests through
+  // Read sessionStorage directly to avoid React state hydration lag
   useEffect(() => {
-    if (!authLoading && !user && !isGuest) {
+    const guestActive = sessionStorage.getItem("guestMode") === "true";
+    if (!authLoading && !user && !isGuest && !guestActive) {
       navigate("/auth");
     }
   }, [user, authLoading, isGuest, navigate]);
