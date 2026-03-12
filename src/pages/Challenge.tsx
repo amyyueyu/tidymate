@@ -43,7 +43,7 @@ interface Challenge {
 interface Room {
   id: string;
   name: string;
-  before_image_url: string;
+  before_image_url?: string;
   after_image_url: string | null;
   intent: string;
   total_challenges: number;
@@ -157,9 +157,11 @@ const ChallengePage = () => {
 
   const fetchRoomData = async () => {
     setLoading(true);
+    // Exclude before_image_url from the initial fetch — it can be a large base64 blob
+    // for legacy rooms and is only needed when viewing the VisionComparison component.
     const { data: roomData, error: roomError } = await supabase
       .from("rooms")
-      .select("*")
+      .select("id, name, intent, total_challenges, completed_challenges, status, after_image_url")
       .eq("id", roomId)
       .single();
 
@@ -403,12 +405,25 @@ const ChallengePage = () => {
 
       {/* Main Content */}
       <main className="flex-1 container max-w-2xl mx-auto px-4 py-6 flex flex-col">
-        {/* Vision Toggle */}
+        {/* Vision Toggle — before_image_url is lazily loaded on demand */}
         {room.after_image_url && (
           <Button
             variant="outline"
             className="mb-4 gap-2 animate-fade-in"
-            onClick={() => setShowVision(!showVision)}
+            onClick={async () => {
+              if (!showVision && !room.before_image_url && roomId) {
+                // Lazy-load the (potentially large) before image only when needed
+                const { data } = await supabase
+                  .from("rooms")
+                  .select("before_image_url")
+                  .eq("id", roomId)
+                  .single();
+                if (data?.before_image_url) {
+                  setRoom((prev) => prev ? { ...prev, before_image_url: data.before_image_url } : prev);
+                }
+              }
+              setShowVision(!showVision);
+            }}
           >
             <Eye className="w-4 h-4" />
             {showVision ? "Hide Vision" : "See Your Vision"}
@@ -418,7 +433,7 @@ const ChallengePage = () => {
         {showVision && room.after_image_url && (
           <div className="mb-6 animate-scale-in">
             <VisionComparison
-              beforeImage={room.before_image_url}
+              beforeImage={room.before_image_url || ""}
               afterImage={room.after_image_url}
             />
           </div>
