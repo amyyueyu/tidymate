@@ -46,13 +46,14 @@ const Capture = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // If guest has already used their one session, redirect to sign up
+  // If guest tries to start a second session (sessionUsed was set before this page loaded),
+  // redirect them to sign up — but ONLY if they haven't started the analysis yet
   useEffect(() => {
     const guestActive = sessionStorage.getItem("guestMode") === "true";
-    if (guestActive && sessionUsed) {
+    if (guestActive && sessionUsed && !analysisComplete) {
       navigate("/auth?signup=1");
     }
-  }, [sessionUsed, navigate]);
+  }, [sessionUsed, analysisComplete, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
