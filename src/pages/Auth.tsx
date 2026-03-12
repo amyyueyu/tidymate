@@ -7,12 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, Leaf, ArrowRight } from "lucide-react";
 import beforeRoom from "@/assets/before-room.jpg";
 import afterRoom from "@/assets/after-room.jpg";
 import beforeBedroom from "@/assets/before-bedroom.jpg";
 import afterBedroom from "@/assets/after-bedroom.jpg";
-import tidymateLogo from "@/assets/tidymate-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -198,7 +197,10 @@ const Auth = () => {
           </div>
  
           <div className="text-center mb-8">
-            <img src={tidymateLogo} alt="TidyMate" className="h-20 w-auto mx-auto mb-2" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
+              <Leaf className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">TidyMate</h1>
             <p className="text-muted-foreground mt-2">
               Transform chaos into calm, one challenge at a time
             </p>
