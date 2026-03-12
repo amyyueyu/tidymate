@@ -70,7 +70,7 @@ const ChallengePage = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
 
@@ -93,6 +93,7 @@ const ChallengePage = () => {
   // Load room data — guest branch only runs ONCE per roomId via ref gate
   useEffect(() => {
     if (isGuest && guestRoom && roomId === guestRoom.id) {
+      // Only hydrate initial index once; subsequent renders must not reset selection
       if (guestHydratedRoomIdRef.current !== roomId) {
         guestHydratedRoomIdRef.current = roomId;
         const mappedChallenges: Challenge[] = guestChallenges.map((c) => ({ ...c }));
@@ -105,20 +106,11 @@ const ChallengePage = () => {
           setTimeRemaining(mappedChallenges[initialIndex].time_estimate_minutes * 60);
         }
       }
+      setLoading(false);
     } else if (!isGuest && roomId && user) {
       fetchRoomData();
     }
   }, [roomId, user, isGuest, guestRoom]);
-
-  // Safety timeout — if still loading after 12s, force-clear it
-  useEffect(() => {
-    if (!loading) return;
-    const t = setTimeout(() => {
-      setLoading(false);
-      toast.error("Taking too long. Please try again.");
-    }, 12000);
-    return () => clearTimeout(t);
-  }, [loading]);
 
   // NOTE: removed the useEffect that called updateGuestRoom(room) on every room change —
   // guest room is already updated inside completeChallenge / skipChallenge directly.
@@ -165,43 +157,35 @@ const ChallengePage = () => {
 
   const fetchRoomData = async () => {
     setLoading(true);
-    try {
-      let roomData = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const { data } = await supabase
-          .from("rooms")
-          .select("*")
-          .eq("id", roomId)
-          .maybeSingle();
-        if (data) { roomData = data; break; }
-        if (attempt < 2) await new Promise((r) => setTimeout(r, 700));
-      }
+    const { data: roomData, error: roomError } = await supabase
+      .from("rooms")
+      .select("*")
+      .eq("id", roomId)
+      .single();
 
-      if (!roomData) {
-        toast.error("Room not found. Please try again.");
-        navigate("/");
-        return;
-      }
-      setRoom(roomData);
-
-      const { data: challengeData } = await supabase
-        .from("challenges")
-        .select("*")
-        .eq("room_id", roomId)
-        .order("sort_order", { ascending: true });
-
-      if (challengeData) {
-        setChallenges(challengeData);
-        const firstIncomplete = challengeData.findIndex((c) => c.status !== "completed");
-        const initialIndex = firstIncomplete >= 0 ? firstIncomplete : 0;
-        setCurrentChallengeIndex(initialIndex);
-        if (challengeData[initialIndex]) {
-          setTimeRemaining(challengeData[initialIndex].time_estimate_minutes * 60);
-        }
-      }
-    } finally {
-      setLoading(false);
+    if (roomError) {
+      toast.error("Room not found");
+      navigate("/");
+      return;
     }
+    setRoom(roomData);
+
+    const { data: challengeData } = await supabase
+      .from("challenges")
+      .select("*")
+      .eq("room_id", roomId)
+      .order("sort_order", { ascending: true });
+
+    if (challengeData) {
+      setChallenges(challengeData);
+      const firstIncomplete = challengeData.findIndex((c) => c.status !== "completed");
+      const initialIndex = firstIncomplete >= 0 ? firstIncomplete : 0;
+      setCurrentChallengeIndex(initialIndex);
+      if (challengeData[initialIndex]) {
+        setTimeRemaining(challengeData[initialIndex].time_estimate_minutes * 60);
+      }
+    }
+    setLoading(false);
   };
 
   const currentChallenge = challenges[currentChallengeIndex];
@@ -322,7 +306,7 @@ const ChallengePage = () => {
     }
   };
 
-  if (loading || (authLoading && !isGuest)) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
