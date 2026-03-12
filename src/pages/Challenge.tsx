@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -69,6 +69,7 @@ const ChallengePage = () => {
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [loading, setLoading] = useState(true);
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
@@ -105,22 +106,40 @@ const ChallengePage = () => {
     }
   }, [room]);
 
-  // Timer
-  useEffect(() => {
-    if (!timerActive) return;
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setTimerActive(false);
-          toast("⏰ Time's up! How did it go?");
-          return 0;
-        }
-        return prev - 1;
-      });
+  // Cleanup interval on unmount
+  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
+
+  const stopInterval = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  const startTimer = () => {
+    if (!currentChallenge) return;
+    stopInterval();
+    const startTime = currentChallenge.time_estimate_minutes * 60;
+    setTimeRemaining(startTime);
+    setTimerActive(true);
+    let remaining = startTime;
+    intervalRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        stopInterval();
+        setTimerActive(false);
+        setTimeRemaining(0);
+        toast("⏰ Time's up! How did it go?");
+      } else {
+        setTimeRemaining(remaining);
+      }
     }, 1000);
-    return () => clearInterval(interval);
-  }, [timerActive]);
+  };
+
+  const pauseTimer = () => {
+    stopInterval();
+    setTimerActive(false);
+  };
 
   const fetchRoomData = async () => {
     setLoading(true);
@@ -166,17 +185,11 @@ const ChallengePage = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const startTimer = () => {
-    if (currentChallenge) {
-      setTimerActive(false); // ensure effect resets before re-starting
-      setTimeRemaining(currentChallenge.time_estimate_minutes * 60);
-      setTimeout(() => setTimerActive(true), 0);
-    }
-  };
-
   const completeChallenge = async () => {
     if (!currentChallenge || !room) return;
+    stopInterval();
     setTimerActive(false);
+
 
     const newCompletedCount = completedCount + 1;
     const isLast = currentChallengeIndex === challenges.length - 1;
@@ -234,6 +247,7 @@ const ChallengePage = () => {
 
   const skipChallenge = async () => {
     if (!currentChallenge) return;
+    stopInterval();
     setTimerActive(false);
 
     if (isGuest) {
@@ -261,6 +275,7 @@ const ChallengePage = () => {
   const selectChallenge = (index: number) => {
     const challenge = challenges[index];
     if (challenge.status === "completed") return;
+    stopInterval();
     setTimerActive(false);
     setCurrentChallengeIndex(index);
     setTimeRemaining(challenge.time_estimate_minutes * 60);
@@ -478,7 +493,7 @@ const ChallengePage = () => {
                       </Button>
                     ) : (
                       <Button
-                        onClick={() => setTimerActive(false)}
+                        onClick={pauseTimer}
                         variant="outline"
                         size="lg"
                         className="gap-2"
