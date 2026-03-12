@@ -178,7 +178,7 @@ import afterBedroom from "@/assets/after-bedroom.jpg";
             </div>
             <h1 className="text-3xl font-bold text-foreground">TidyMate</h1>
             <p className="text-muted-foreground mt-2">
-              Your AI body-doubling companion for ADHD
+              Transform chaos into calm, one challenge at a time
             </p>
           </div>
 
