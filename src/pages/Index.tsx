@@ -48,7 +48,7 @@ const Index = () => {
   const fetchActiveRooms = async () => {
     const { data } = await supabase
       .from("rooms")
-      .select("id, name, status, total_challenges, completed_challenges, created_at")
+      .select("*")
       .eq("user_id", user?.id)
       .eq("status", "active")
       .order("created_at", { ascending: false })

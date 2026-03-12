@@ -67,33 +67,6 @@ const Capture = () => {
     }
   };
 
-  // Upload a base64 data URL to storage and return the public URL
-  const uploadImageToStorage = async (dataUrl: string): Promise<string> => {
-    const base64 = dataUrl.split(",")[1];
-    const mimeType = dataUrl.split(";")[0].split(":")[1] || "image/jpeg";
-    const ext = mimeType.split("/")[1] || "jpg";
-    const fileName = `${user!.id}/${Date.now()}.${ext}`;
-
-    const byteChars = atob(base64);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      byteArray[i] = byteChars.charCodeAt(i);
-    }
-    const blob = new Blob([byteArray], { type: mimeType });
-
-    const { error: uploadError } = await supabase.storage
-      .from("room-images")
-      .upload(fileName, blob, { contentType: mimeType, upsert: false });
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("room-images")
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
   const handleAnalyze = async () => {
     if (!imagePreview) {
       toast.error("Please capture or upload an image first");
@@ -115,7 +88,7 @@ const Capture = () => {
       const analysisResult = response.data;
 
       if (isGuest) {
-        // Guest mode: store everything in context only (keep base64 for in-memory use)
+        // Guest mode: store everything in context only
         const guestId = `guest-${Date.now()}`;
         const room: GuestRoom = {
           id: guestId,
@@ -148,20 +121,13 @@ const Capture = () => {
         // Generate vision in background for guest too
         generateVisionGuest(imagePreview, intent);
       } else {
-        // Authenticated mode: upload image to storage first, then write to DB
-        let beforeImageUrl = imagePreview;
-        try {
-          beforeImageUrl = await uploadImageToStorage(imagePreview);
-        } catch (uploadErr) {
-          console.warn("Image upload failed, falling back to base64:", uploadErr);
-        }
-
+        // Authenticated mode: write to DB
         const { data: room, error: roomError } = await supabase
           .from("rooms")
           .insert({
             user_id: user!.id,
             name: analysisResult.roomName || "My Space",
-            before_image_url: beforeImageUrl,
+            before_image_url: imagePreview,
             intent,
             total_challenges: analysisResult.challenges?.length || 0,
           })
