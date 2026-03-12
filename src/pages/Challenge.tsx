@@ -160,9 +160,10 @@ const ChallengePage = () => {
 
   const fetchRoomData = async () => {
     setLoading(true);
+    // Exclude before_image_url from initial fetch — old rows may have multi-MB base64 blobs
     const { data: roomData, error: roomError } = await supabase
       .from("rooms")
-      .select("*")
+      .select("id, name, intent, total_challenges, completed_challenges, status, after_image_url")
       .eq("id", roomId)
       .single();
 
@@ -175,7 +176,7 @@ const ChallengePage = () => {
 
     const { data: challengeData } = await supabase
       .from("challenges")
-      .select("*")
+      .select("id, title, description, time_estimate_minutes, points, status, sort_order")
       .eq("room_id", roomId)
       .order("sort_order", { ascending: true });
 
@@ -189,6 +190,19 @@ const ChallengePage = () => {
       }
     }
     setLoading(false);
+  };
+
+  // Lazy-load the before image only when the user clicks "See Your Vision"
+  const fetchBeforeImage = async () => {
+    if (beforeImageUrl || loadingBeforeImage || !roomId) return;
+    setLoadingBeforeImage(true);
+    const { data } = await supabase
+      .from("rooms")
+      .select("before_image_url")
+      .eq("id", roomId)
+      .single();
+    if (data?.before_image_url) setBeforeImageUrl(data.before_image_url);
+    setLoadingBeforeImage(false);
   };
 
   const currentChallenge = challenges[currentChallengeIndex];
