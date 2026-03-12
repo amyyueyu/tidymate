@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
-import { Sparkles, Leaf, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import beforeRoom from "@/assets/before-room.jpg";
 import afterRoom from "@/assets/after-room.jpg";
 import beforeBedroom from "@/assets/before-bedroom.jpg";
 import afterBedroom from "@/assets/after-bedroom.jpg";
+import tidymateLogo from "@/assets/tidymate-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();

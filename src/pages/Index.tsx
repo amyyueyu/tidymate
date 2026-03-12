@@ -13,11 +13,11 @@ import {
   Star, 
   Trophy, 
   LogOut,
-  Leaf,
   ArrowRight,
   Sparkles,
   BarChart2
 } from "lucide-react";
+import tidymateLogo from "@/assets/tidymate-logo.png";
 
 const GREETINGS = [
   "No pressure. Even 10 minutes counts.",
