@@ -95,6 +95,7 @@ const ChallengePage = () => {
   // Load room data — guest branch only runs ONCE per roomId via ref gate
   useEffect(() => {
     if (isGuest && guestRoom && roomId === guestRoom.id) {
+      if (guestRoom.before_image_url) setBeforeImageUrl(guestRoom.before_image_url);
       // Only hydrate initial index once; subsequent renders must not reset selection
       if (guestHydratedRoomIdRef.current !== roomId) {
         guestHydratedRoomIdRef.current = roomId;
