@@ -414,11 +414,12 @@ const ChallengePage = () => {
         <Card className="border-0 shadow-sm mb-4 animate-fade-in">
           <CardContent className="p-3">
             <p className="text-xs text-muted-foreground mb-2 px-1">Select a task to work on:</p>
-            <ScrollArea className="max-h-48">
+            <div className="max-h-48 overflow-y-auto">
               <div className="space-y-1">
                 {challenges.map((challenge, index) => (
                   <button
                     key={challenge.id}
+                    type="button"
                     onClick={() => selectChallenge(index)}
                     disabled={challenge.status === "completed"}
                     className={cn(
@@ -451,7 +452,7 @@ const ChallengePage = () => {
                   </button>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           </CardContent>
         </Card>
 
