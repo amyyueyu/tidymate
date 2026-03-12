@@ -64,17 +64,26 @@
      return data;
    };
  
-   const addPoints = async (points: number) => {
-     if (!profile) return;
-     
-     const newPoints = profile.total_points + points;
-     const newLevel = Math.floor(newPoints / 100) + 1;
-     
-     return updateProfile({
-       total_points: newPoints,
-       current_level: newLevel,
-     });
-   };
+  const addPoints = async (_points: number, challengeId: string) => {
+    if (!user) return;
+
+    const { error } = await supabase.rpc("complete_challenge_add_points", {
+      p_challenge_id: challengeId,
+    });
+
+    if (error) {
+      console.error("Error adding points:", error);
+      throw error;
+    }
+
+    // Re-fetch profile so local state reflects the server-computed values
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (data) setProfile(data);
+  };
  
    return { profile, loading, updateProfile, addPoints };
  }
