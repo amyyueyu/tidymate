@@ -37,9 +37,10 @@ const Auth = () => {
            email,
            password,
          });
-         if (error) throw error;
-         toast.success("Welcome back! 🎉");
-         navigate("/");
+          if (error) throw error;
+          clearGuestSession();
+          toast.success("Welcome back! 🎉");
+          navigate("/");
        } else {
          const { error } = await supabase.auth.signUp({
            email,
