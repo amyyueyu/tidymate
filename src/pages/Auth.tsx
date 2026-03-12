@@ -15,7 +15,7 @@ import afterBedroom from "@/assets/after-bedroom.jpg";
  
 const Auth = () => {
   const navigate = useNavigate();
-  const { startGuestMode } = useGuestMode();
+  const { startGuestMode, clearGuestSession } = useGuestMode();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,9 +37,10 @@ const Auth = () => {
            email,
            password,
          });
-         if (error) throw error;
-         toast.success("Welcome back! 🎉");
-         navigate("/");
+          if (error) throw error;
+          clearGuestSession();
+          toast.success("Welcome back! 🎉");
+          navigate("/");
        } else {
          const { error } = await supabase.auth.signUp({
            email,

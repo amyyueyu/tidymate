@@ -23,7 +23,9 @@ type Intent = "tidy" | "declutter" | "redesign";
 const Capture = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { isGuest, setGuestSession, sessionUsed, markSessionUsed } = useGuestMode();
+  const { isGuest: isGuestRaw, setGuestSession, sessionUsed, markSessionUsed, clearGuestSession } = useGuestMode();
+  // If the user is authenticated, never treat them as a guest (clears stale sessionStorage)
+  const isGuest = isGuestRaw && !user;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [intent, setIntent] = useState<Intent>("tidy");
