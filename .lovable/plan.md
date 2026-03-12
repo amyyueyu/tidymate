@@ -1,78 +1,33 @@
 
+## Root Cause
 
-# TidyMind - ADHD-Friendly Declutter Assistant
+The network logs confirm the exact problem: the `rooms` table still has old rows where `before_image_url` contains a **full multi-megabyte base64 JPEG string**. The previous fix (uploading to storage) only applies to *new* rooms — existing ones still have the base64 blob stored directly in the DB column.
 
-## Overview
-An AI-powered app that transforms tidying and decluttering from overwhelming chores into dopamine-boosting, achievable challenges. Users photograph their spaces, and AI breaks down the chaos into fun, timed micro-tasks while showing them an inspiring vision of the outcome.
+When `Challenge.tsx` calls `select("*")` and `Index.tsx` also calls `select("*")`, the response payload includes these massive base64 strings. Downloading 3–5MB of base64 just to show the room name and list of tasks is what causes the "Loading challenges..." to hang indefinitely.
 
----
+## Two-part fix
 
-## Core User Flow
+**1. Selective column fetching — never load image bytes until needed**
 
-### 1. Onboarding & Sign Up
-- Simple account creation (email/password or Google sign-in)
-- Brief "What's your biggest challenge?" selector (tidying, decluttering, organizing)
-- Set notification preferences for gentle reminders
+- `Challenge.tsx` → change initial room fetch to `select("id, name, intent, total_challenges, completed_challenges, status, after_image_url")` — deliberately exclude `before_image_url`. The page can load instantly since no image data is pulled.
+- `Index.tsx` → change rooms fetch to `select("id, name, status, total_challenges, completed_challenges, created_at")` — the home screen only shows the room name and progress, it never needs images.
+- Add a separate lazy fetch for `before_image_url` in `Challenge.tsx` — only triggered when the user clicks "See Your Vision". This keeps the vision comparison working without blocking initial load.
 
-### 2. Capture Your Space
-- Camera interface to photograph a messy area
-- Select intent: "Tidy Up" / "Declutter" / "Redesign"
-- Optional: Add context ("I have 15 minutes" or "Weekend project")
+**2. Room interface update**
 
-### 3. AI Analysis & Vision
-- AI analyzes the image to identify items and clutter patterns
-- Generates an inspiring "after" visualization of the transformed space
-- Side-by-side before/after view to spark motivation
+- Update the `Room` interface in `Challenge.tsx` to make `before_image_url` optional (`string | null`) so TypeScript doesn't complain when it's not included in the initial fetch.
+- Pass `beforeImageUrl` as a separate piece of state to `VisionComparison`.
 
-### 4. Gamified Challenges
-- AI breaks the task into small, ADHD-friendly micro-challenges
-- Each challenge has:
-  - Clear, single-action instruction ("Clear the coffee table surface")
-  - Time estimate (5-10 min chunks)
-  - Optional timer for beat-the-clock mode
-  - Point value based on difficulty
-- Progress bar showing journey to completion
+```text
+Current (broken):
+  fetchRoomData → select("*") → downloads 5MB base64 → hangs
 
-### 5. Rewards & Progress
-- Points earned for each completed challenge
-- Daily streaks with gentle celebration
-- Level system unlocking achievement badges
-- Room transformation history gallery
+Fixed:
+  fetchRoomData → select("id, name, ...") → loads instantly (small payload)
+  User clicks "See Your Vision" → lazy fetch before_image_url → shows comparison
+```
 
----
+## Files to change
 
-## Key Screens
-
-| Screen | Purpose |
-|--------|---------|
-| **Home Dashboard** | Quick-start camera, streak counter, active challenges |
-| **Capture & Analyze** | Camera view with intent selector |
-| **Vision Board** | Before/after comparison with AI visualization |
-| **Challenge Mode** | Active task with timer, progress, encouragement |
-| **Progress Profile** | Points, level, badges, streak history, completed rooms |
-
----
-
-## Design Philosophy
-- **Calm & minimal**: Soft, muted color palette with plenty of whitespace
-- **Low cognitive load**: One action per screen, clear visual hierarchy
-- **Encouraging tone**: Supportive microcopy ("You've got this!" not "You must...")
-- **Visual rewards**: Subtle animations for completions, not overwhelming
-
----
-
-## Technical Approach
-- **Backend**: Lovable Cloud for authentication, database (user profiles, challenges, progress)
-- **AI**: Lovable AI for image analysis and generating personalized challenges
-- **Image Generation**: AI-powered before/after visualization using the image generation model
-- **Mobile-optimized**: Responsive design that works great on phones for easy photo capture
-
----
-
-## MVP Scope Summary
-✅ User accounts with progress persistence  
-✅ Photo capture and AI room analysis  
-✅ Before/after transformation visualization  
-✅ Gamified micro-challenges with timers  
-✅ Points, levels, and streak tracking  
-
+- `src/pages/Challenge.tsx` — selective column select + lazy image fetch
+- `src/pages/Index.tsx` — selective column select (no images needed on home)
