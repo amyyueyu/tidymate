@@ -36,21 +36,23 @@ const Capture = () => {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
 
-  // Auth guard — allow guests through
-  // Read sessionStorage directly to avoid React state hydration lag
+  // Auth guard — use sessionStorage as the authoritative source for guest status
+  // to avoid React state race conditions on initial mount
   useEffect(() => {
+    if (authLoading) return;
     const guestActive = sessionStorage.getItem("guestMode") === "true";
-    if (!authLoading && !user && !isGuest && !guestActive) {
+    if (!user && !guestActive) {
       navigate("/auth");
     }
-  }, [user, authLoading, isGuest, navigate]);
+  }, [user, authLoading, navigate]);
 
   // If guest has already used their one session, redirect to sign up
   useEffect(() => {
-    if (isGuest && sessionUsed) {
+    const guestActive = sessionStorage.getItem("guestMode") === "true";
+    if (guestActive && sessionUsed) {
       navigate("/auth?signup=1");
     }
-  }, [isGuest, sessionUsed, navigate]);
+  }, [sessionUsed, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

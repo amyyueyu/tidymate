@@ -38,7 +38,6 @@ const Auth = () => {
            password,
          });
           if (error) throw error;
-          clearGuestSession();
           toast.success("Welcome back! 🎉");
           navigate("/");
        } else {
