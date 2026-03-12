@@ -1,78 +1,52 @@
 
+## Bug: Timer Not Counting Down
 
-# TidyMind - ADHD-Friendly Declutter Assistant
+**Root Cause**: The timer `useEffect` has `timeRemaining` in its dependency array. This means:
+1. Timer starts → interval fires → `timeRemaining` decrements by 1
+2. State change triggers re-render → `useEffect` cleanup runs → **interval is cleared**
+3. New interval is created → but the render cycle and interval timing are out of sync
+4. Net result: the interval is torn down and recreated on every tick, causing missed ticks and the appearance of the timer being frozen
 
-## Overview
-An AI-powered app that transforms tidying and decluttering from overwhelming chores into dopamine-boosting, achievable challenges. Users photograph their spaces, and AI breaks down the chaos into fun, timed micro-tasks while showing them an inspiring vision of the outcome.
+**Fix**: Remove `timeRemaining` from the dependency array. The `setTimeRemaining((prev) => prev - 1)` already uses the functional updater form, so it doesn't need `timeRemaining` as a captured closure value. The `timeRemaining === 0` check for "time's up" can be handled inside the interval callback itself.
 
----
+**File to change**: `src/pages/Challenge.tsx`, lines 108–120
 
-## Core User Flow
+**Before**:
+```ts
+useEffect(() => {
+  let interval: NodeJS.Timeout;
+  if (timerActive && timeRemaining > 0) {
+    interval = setInterval(() => {
+      setTimeRemaining((prev) => prev - 1);
+    }, 1000);
+  } else if (timeRemaining === 0 && timerActive) {
+    setTimerActive(false);
+    toast("⏰ Time's up! How did it go?");
+  }
+  return () => clearInterval(interval);
+}, [timerActive, timeRemaining]);
+```
 
-### 1. Onboarding & Sign Up
-- Simple account creation (email/password or Google sign-in)
-- Brief "What's your biggest challenge?" selector (tidying, decluttering, organizing)
-- Set notification preferences for gentle reminders
+**After**:
+```ts
+useEffect(() => {
+  if (!timerActive) return;
+  const interval = setInterval(() => {
+    setTimeRemaining((prev) => {
+      if (prev <= 1) {
+        clearInterval(interval);
+        setTimerActive(false);
+        toast("⏰ Time's up! How did it go?");
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+  return () => clearInterval(interval);
+}, [timerActive]);
+```
 
-### 2. Capture Your Space
-- Camera interface to photograph a messy area
-- Select intent: "Tidy Up" / "Declutter" / "Redesign"
-- Optional: Add context ("I have 15 minutes" or "Weekend project")
-
-### 3. AI Analysis & Vision
-- AI analyzes the image to identify items and clutter patterns
-- Generates an inspiring "after" visualization of the transformed space
-- Side-by-side before/after view to spark motivation
-
-### 4. Gamified Challenges
-- AI breaks the task into small, ADHD-friendly micro-challenges
-- Each challenge has:
-  - Clear, single-action instruction ("Clear the coffee table surface")
-  - Time estimate (5-10 min chunks)
-  - Optional timer for beat-the-clock mode
-  - Point value based on difficulty
-- Progress bar showing journey to completion
-
-### 5. Rewards & Progress
-- Points earned for each completed challenge
-- Daily streaks with gentle celebration
-- Level system unlocking achievement badges
-- Room transformation history gallery
-
----
-
-## Key Screens
-
-| Screen | Purpose |
-|--------|---------|
-| **Home Dashboard** | Quick-start camera, streak counter, active challenges |
-| **Capture & Analyze** | Camera view with intent selector |
-| **Vision Board** | Before/after comparison with AI visualization |
-| **Challenge Mode** | Active task with timer, progress, encouragement |
-| **Progress Profile** | Points, level, badges, streak history, completed rooms |
-
----
-
-## Design Philosophy
-- **Calm & minimal**: Soft, muted color palette with plenty of whitespace
-- **Low cognitive load**: One action per screen, clear visual hierarchy
-- **Encouraging tone**: Supportive microcopy ("You've got this!" not "You must...")
-- **Visual rewards**: Subtle animations for completions, not overwhelming
-
----
-
-## Technical Approach
-- **Backend**: Lovable Cloud for authentication, database (user profiles, challenges, progress)
-- **AI**: Lovable AI for image analysis and generating personalized challenges
-- **Image Generation**: AI-powered before/after visualization using the image generation model
-- **Mobile-optimized**: Responsive design that works great on phones for easy photo capture
-
----
-
-## MVP Scope Summary
-✅ User accounts with progress persistence  
-✅ Photo capture and AI room analysis  
-✅ Before/after transformation visualization  
-✅ Gamified micro-challenges with timers  
-✅ Points, levels, and streak tracking  
-
+This way:
+- The effect only re-runs when `timerActive` changes (start/pause/stop)
+- The interval runs stably for its full lifetime without being torn down each second
+- "Time's up" is handled inside the callback using the latest `prev` value
