@@ -43,7 +43,7 @@ interface Challenge {
 interface Room {
   id: string;
   name: string;
-  before_image_url?: string;
+  before_image_url: string;
   after_image_url: string | null;
   intent: string;
   total_challenges: number;
@@ -70,7 +70,7 @@ const ChallengePage = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
 
@@ -93,7 +93,6 @@ const ChallengePage = () => {
   // Load room data — guest branch only runs ONCE per roomId via ref gate
   useEffect(() => {
     if (isGuest && guestRoom && roomId === guestRoom.id) {
-      // Only hydrate initial index once; subsequent renders must not reset selection
       if (guestHydratedRoomIdRef.current !== roomId) {
         guestHydratedRoomIdRef.current = roomId;
         const mappedChallenges: Challenge[] = guestChallenges.map((c) => ({ ...c }));
@@ -106,11 +105,20 @@ const ChallengePage = () => {
           setTimeRemaining(mappedChallenges[initialIndex].time_estimate_minutes * 60);
         }
       }
-      setLoading(false);
     } else if (!isGuest && roomId && user) {
       fetchRoomData();
     }
   }, [roomId, user, isGuest, guestRoom]);
+
+  // Safety timeout — if still loading after 12s, force-clear it
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => {
+      setLoading(false);
+      toast.error("Taking too long. Please try again.");
+    }, 12000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   // NOTE: removed the useEffect that called updateGuestRoom(room) on every room change —
   // guest room is already updated inside completeChallenge / skipChallenge directly.
@@ -157,37 +165,43 @@ const ChallengePage = () => {
 
   const fetchRoomData = async () => {
     setLoading(true);
-    // Exclude before_image_url from the initial fetch — it can be a large base64 blob
-    // for legacy rooms and is only needed when viewing the VisionComparison component.
-    const { data: roomData, error: roomError } = await supabase
-      .from("rooms")
-      .select("id, name, intent, total_challenges, completed_challenges, status, after_image_url")
-      .eq("id", roomId)
-      .single();
-
-    if (roomError) {
-      toast.error("Room not found");
-      navigate("/");
-      return;
-    }
-    setRoom(roomData);
-
-    const { data: challengeData } = await supabase
-      .from("challenges")
-      .select("*")
-      .eq("room_id", roomId)
-      .order("sort_order", { ascending: true });
-
-    if (challengeData) {
-      setChallenges(challengeData);
-      const firstIncomplete = challengeData.findIndex((c) => c.status !== "completed");
-      const initialIndex = firstIncomplete >= 0 ? firstIncomplete : 0;
-      setCurrentChallengeIndex(initialIndex);
-      if (challengeData[initialIndex]) {
-        setTimeRemaining(challengeData[initialIndex].time_estimate_minutes * 60);
+    try {
+      let roomData = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("id", roomId)
+          .maybeSingle();
+        if (data) { roomData = data; break; }
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 700));
       }
+
+      if (!roomData) {
+        toast.error("Room not found. Please try again.");
+        navigate("/");
+        return;
+      }
+      setRoom(roomData);
+
+      const { data: challengeData } = await supabase
+        .from("challenges")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("sort_order", { ascending: true });
+
+      if (challengeData) {
+        setChallenges(challengeData);
+        const firstIncomplete = challengeData.findIndex((c) => c.status !== "completed");
+        const initialIndex = firstIncomplete >= 0 ? firstIncomplete : 0;
+        setCurrentChallengeIndex(initialIndex);
+        if (challengeData[initialIndex]) {
+          setTimeRemaining(challengeData[initialIndex].time_estimate_minutes * 60);
+        }
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const currentChallenge = challenges[currentChallengeIndex];
@@ -235,7 +249,7 @@ const ChallengePage = () => {
         .from("challenges")
         .update({ status: "completed", completed_at: new Date().toISOString() })
         .eq("id", currentChallenge.id);
-      await addPoints(currentChallenge.points, currentChallenge.id);
+      await addPoints(currentChallenge.points);
       await supabase
         .from("rooms")
         .update({
@@ -308,7 +322,7 @@ const ChallengePage = () => {
     }
   };
 
-  if (loading || authLoading) {
+  if (loading || (authLoading && !isGuest)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -405,25 +419,12 @@ const ChallengePage = () => {
 
       {/* Main Content */}
       <main className="flex-1 container max-w-2xl mx-auto px-4 py-6 flex flex-col">
-        {/* Vision Toggle — before_image_url is lazily loaded on demand */}
+        {/* Vision Toggle */}
         {room.after_image_url && (
           <Button
             variant="outline"
             className="mb-4 gap-2 animate-fade-in"
-            onClick={async () => {
-              if (!showVision && !room.before_image_url && roomId) {
-                // Lazy-load the (potentially large) before image only when needed
-                const { data } = await supabase
-                  .from("rooms")
-                  .select("before_image_url")
-                  .eq("id", roomId)
-                  .single();
-                if (data?.before_image_url) {
-                  setRoom((prev) => prev ? { ...prev, before_image_url: data.before_image_url } : prev);
-                }
-              }
-              setShowVision(!showVision);
-            }}
+            onClick={() => setShowVision(!showVision)}
           >
             <Eye className="w-4 h-4" />
             {showVision ? "Hide Vision" : "See Your Vision"}
@@ -433,7 +434,7 @@ const ChallengePage = () => {
         {showVision && room.after_image_url && (
           <div className="mb-6 animate-scale-in">
             <VisionComparison
-              beforeImage={room.before_image_url || ""}
+              beforeImage={room.before_image_url}
               afterImage={room.after_image_url}
             />
           </div>

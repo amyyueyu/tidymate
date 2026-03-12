@@ -136,30 +136,6 @@ export type Database = {
         }
         Relationships: []
       }
-      rate_limits: {
-        Row: {
-          call_count: number
-          created_at: string
-          id: string
-          key: string
-          window_start: string
-        }
-        Insert: {
-          call_count?: number
-          created_at?: string
-          id?: string
-          key: string
-          window_start?: string
-        }
-        Update: {
-          call_count?: number
-          created_at?: string
-          id?: string
-          key?: string
-          window_start?: string
-        }
-        Relationships: []
-      }
       rooms: {
         Row: {
           after_image_url: string | null
@@ -236,14 +212,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_and_increment_rate_limit: {
-        Args: { p_key: string; p_max_calls: number; p_window_seconds: number }
-        Returns: boolean
-      }
-      complete_challenge_add_points: {
-        Args: { p_challenge_id: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
