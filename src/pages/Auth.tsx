@@ -257,6 +257,25 @@ const Auth = () => {
                     </span>
                   )}
                 </Button>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 text-base font-medium border-primary/40 text-primary hover:bg-primary/5 hover:text-primary hover:border-primary gap-2"
+                  onClick={handleGuestMode}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Try it without logging in
+                </Button>
               </form>
 
               <div className="mt-6 text-center">
