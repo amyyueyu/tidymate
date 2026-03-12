@@ -106,73 +106,39 @@ const ChallengePage = () => {
     }
   }, [room]);
 
-  // Timer
-  useEffect(() => {
-    if (!timerActive) return;
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setTimerActive(false);
-          toast("⏰ Time's up! How did it go?");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timerActive]);
+  // Cleanup interval on unmount
+  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
 
-  const fetchRoomData = async () => {
-    setLoading(true);
-    const { data: roomData, error: roomError } = await supabase
-      .from("rooms")
-      .select("*")
-      .eq("id", roomId)
-      .single();
-
-    if (roomError) {
-      toast.error("Room not found");
-      navigate("/");
-      return;
+  const stopInterval = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-    setRoom(roomData);
-
-    const { data: challengeData } = await supabase
-      .from("challenges")
-      .select("*")
-      .eq("room_id", roomId)
-      .order("sort_order", { ascending: true });
-
-    if (challengeData) {
-      setChallenges(challengeData);
-      const firstIncomplete = challengeData.findIndex((c) => c.status !== "completed");
-      const initialIndex = firstIncomplete >= 0 ? firstIncomplete : 0;
-      setCurrentChallengeIndex(initialIndex);
-      if (challengeData[initialIndex]) {
-        setTimeRemaining(challengeData[initialIndex].time_estimate_minutes * 60);
-      }
-    }
-    setLoading(false);
-  };
-
-  const currentChallenge = challenges[currentChallengeIndex];
-  const completedCount = challenges.filter((c) => c.status === "completed").length;
-  const progressPercent = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
-  const allDone = challenges.length > 0 && completedCount === challenges.length;
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const startTimer = () => {
-    if (currentChallenge) {
-      setTimerActive(false); // ensure effect resets before re-starting
-      setTimeRemaining(currentChallenge.time_estimate_minutes * 60);
-      setTimeout(() => setTimerActive(true), 0);
-    }
+    if (!currentChallenge) return;
+    stopInterval();
+    const startTime = currentChallenge.time_estimate_minutes * 60;
+    setTimeRemaining(startTime);
+    setTimerActive(true);
+    let remaining = startTime;
+    intervalRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        stopInterval();
+        setTimerActive(false);
+        setTimeRemaining(0);
+        toast("⏰ Time's up! How did it go?");
+      } else {
+        setTimeRemaining(remaining);
+      }
+    }, 1000);
+  };
+
+  const pauseTimer = () => {
+    stopInterval();
+    setTimerActive(false);
   };
 
   const completeChallenge = async () => {
