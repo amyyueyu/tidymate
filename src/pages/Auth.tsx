@@ -13,13 +13,19 @@ import afterRoom from "@/assets/after-room.jpg";
 import beforeBedroom from "@/assets/before-bedroom.jpg";
 import afterBedroom from "@/assets/after-bedroom.jpg";
  
- const Auth = () => {
-   const navigate = useNavigate();
-   const [isLogin, setIsLogin] = useState(true);
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
-   const [displayName, setDisplayName] = useState("");
-   const [loading, setLoading] = useState(false);
+const Auth = () => {
+  const navigate = useNavigate();
+  const { clearGuestSession } = useGuestMode();
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleGuestMode = () => {
+    clearGuestSession(); // reset any prior guest session
+    navigate("/capture");
+  };
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
