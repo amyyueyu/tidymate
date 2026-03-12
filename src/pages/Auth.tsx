@@ -1,24 +1,31 @@
- import { useState } from "react";
- import { useNavigate } from "react-router-dom";
- import { supabase } from "@/integrations/supabase/client";
- import { Button } from "@/components/ui/button";
- import { Input } from "@/components/ui/input";
- import { Label } from "@/components/ui/label";
- import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
- import { toast } from "@/components/ui/sonner";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useGuestMode } from "@/contexts/GuestModeContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/components/ui/sonner";
 import { Sparkles, Leaf, ArrowRight } from "lucide-react";
 import beforeRoom from "@/assets/before-room.jpg";
 import afterRoom from "@/assets/after-room.jpg";
 import beforeBedroom from "@/assets/before-bedroom.jpg";
 import afterBedroom from "@/assets/after-bedroom.jpg";
  
- const Auth = () => {
-   const navigate = useNavigate();
-   const [isLogin, setIsLogin] = useState(true);
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
-   const [displayName, setDisplayName] = useState("");
-   const [loading, setLoading] = useState(false);
+const Auth = () => {
+  const navigate = useNavigate();
+  const { clearGuestSession } = useGuestMode();
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleGuestMode = () => {
+    clearGuestSession(); // reset any prior guest session
+    navigate("/capture");
+  };
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
@@ -249,6 +256,25 @@ import afterBedroom from "@/assets/after-bedroom.jpg";
                       {isLogin ? "Sign in" : "Create account"}
                     </span>
                   )}
+                </Button>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 text-base font-medium border-primary/40 text-primary hover:bg-primary/5 hover:text-primary hover:border-primary gap-2"
+                  onClick={handleGuestMode}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Try it without logging in
                 </Button>
               </form>
 
