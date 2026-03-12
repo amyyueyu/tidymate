@@ -107,17 +107,20 @@ const ChallengePage = () => {
 
   // Timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (timerActive && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining((prev) => prev - 1);
-      }, 1000);
-    } else if (timeRemaining === 0 && timerActive) {
-      setTimerActive(false);
-      toast("⏰ Time's up! How did it go?");
-    }
+    if (!timerActive) return;
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTimerActive(false);
+          toast("⏰ Time's up! How did it go?");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(interval);
-  }, [timerActive, timeRemaining]);
+  }, [timerActive]);
 
   const fetchRoomData = async () => {
     setLoading(true);
