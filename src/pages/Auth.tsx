@@ -15,7 +15,7 @@ import afterBedroom from "@/assets/after-bedroom.jpg";
  
 const Auth = () => {
   const navigate = useNavigate();
-  const { startGuestMode } = useGuestMode();
+  const { startGuestMode, clearGuestSession } = useGuestMode();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
