@@ -168,8 +168,9 @@ const ChallengePage = () => {
 
   const startTimer = () => {
     if (currentChallenge) {
+      setTimerActive(false); // ensure effect resets before re-starting
       setTimeRemaining(currentChallenge.time_estimate_minutes * 60);
-      setTimerActive(true);
+      setTimeout(() => setTimerActive(true), 0);
     }
   };
 
