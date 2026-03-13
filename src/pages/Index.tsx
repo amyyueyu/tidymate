@@ -44,6 +44,7 @@ const Index = () => {
   useEffect(() => {
     if (user) {
       fetchActiveRooms();
+      supabase.rpc("is_admin").then(({ data }) => setIsAdmin(!!data));
     }
   }, [user]);
 
