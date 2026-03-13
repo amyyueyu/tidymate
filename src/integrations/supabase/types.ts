@@ -244,6 +244,8 @@ export type Database = {
         Args: { p_challenge_id: string }
         Returns: undefined
       }
+      get_daily_activity: { Args: { p_days?: number }; Returns: Json }
+      get_platform_stats: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
