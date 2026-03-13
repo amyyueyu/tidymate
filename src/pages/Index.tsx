@@ -90,11 +90,6 @@ const Index = () => {
             <span className="font-semibold text-lg">TidyMate</span>
           </div>
           <div className="flex items-center gap-1">
-            {isAdmin && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/stats")}>
-                <BarChart2 className="w-5 h-5" />
-              </Button>
-            )}
             <Button variant="ghost" size="icon" onClick={signOut}>
               <LogOut className="w-5 h-5" />
             </Button>
