@@ -35,6 +35,10 @@ const Index = () => {
   const greeting = useMemo(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)], []);
 
   useEffect(() => {
+    analytics.landingView();
+  }, []);
+
+  useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
     }
