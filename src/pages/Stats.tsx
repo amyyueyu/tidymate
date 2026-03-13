@@ -45,6 +45,7 @@ const Stats = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [stats, setStats] = useState<PlatformStats>({
     total_users: 0,
     users_uploaded: 0,
@@ -67,7 +68,10 @@ const Stats = () => {
 
   useEffect(() => {
     if (!user) return;
-    fetchStats();
+    supabase.rpc("is_admin").then(({ data }) => {
+      setIsAdmin(!!data);
+      if (data) fetchStats();
+    });
   }, [user]);
 
   const fetchStats = async () => {
