@@ -63,6 +63,7 @@ const Capture = () => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         setImagePreview(ev.target?.result as string);
+        analytics.photoUploaded({ room_type: intent });
       };
       reader.readAsDataURL(file);
     }
