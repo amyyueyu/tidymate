@@ -342,7 +342,11 @@ const Auth = () => {
               <div className="mt-6 text-center">
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    const switchingToSignup = isLogin;
+                    setIsLogin(!isLogin);
+                    if (switchingToSignup) analytics.signupStarted();
+                  }}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   
                   {isLogin ?
