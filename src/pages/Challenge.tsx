@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
 import {
   ArrowLeft,
+  Leaf,
   Play,
   Pause,
   Check,
@@ -25,7 +26,6 @@ import {
   FastForward,
   UserPlus,
 } from "lucide-react";
-import logoIcon from "@/assets/logo-icon.png";
 import VisionComparison from "@/components/VisionComparison";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -312,7 +312,7 @@ const ChallengePage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <img src={logoIcon} alt="TidyMate" className="w-12 h-12 mx-auto animate-gentle-bounce" />
+          <Leaf className="w-12 h-12 text-primary mx-auto animate-gentle-bounce" />
           <p className="mt-4 text-muted-foreground">Loading challenges...</p>
         </div>
       </div>
