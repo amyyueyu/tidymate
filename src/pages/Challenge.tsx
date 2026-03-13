@@ -207,9 +207,14 @@ const ChallengePage = () => {
     stopInterval();
     setTimerActive(false);
 
-
     const newCompletedCount = completedCount + 1;
     const isLast = currentChallengeIndex === challenges.length - 1;
+
+    // Track task completion
+    analytics.taskCompleted({
+      room_type: room.intent,
+      tasks_completed: newCompletedCount,
+    });
 
     if (isGuest) {
       // Guest: update context only
@@ -253,6 +258,7 @@ const ChallengePage = () => {
     }
 
     if (isLast) {
+      analytics.roomFinished({ room_type: room.intent, tasks_completed: newCompletedCount });
       toast.success("🏆 Amazing! You've completed all challenges!");
       setSessionComplete(true);
     } else {
