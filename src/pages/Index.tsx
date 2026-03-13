@@ -186,7 +186,7 @@ const Index = () => {
               <Card 
                 key={room.id} 
                 className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-all"
-                onClick={() => navigate(`/challenge/${room.id}`)}
+                onClick={() => { analytics.challengeStarted({ room_type: room.intent, tasks_completed: room.completed_challenges }); navigate(`/challenge/${room.id}`); }}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
