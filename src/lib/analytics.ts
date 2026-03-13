@@ -1,6 +1,6 @@
 import posthog from "posthog-js";
 
-const POSTHOG_KEY = "PASTE_MY_PROJECT_TOKEN_HERE";
+const POSTHOG_KEY = "phc_9cx1kkIvw6ApKJk9MzCwnqz1DjjmOs2ffqiS4Vzlt1e";
 const POSTHOG_HOST = "https://us.i.posthog.com";
 
 export function initAnalytics() {
