@@ -46,15 +46,18 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
         if (error) throw error;
+        if (data.user) {
+          identifyUser(data.user.id, { email: data.user.email });
+        }
         toast.success("Welcome back! 🎉");
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -63,6 +66,13 @@ const Auth = () => {
           }
         });
         if (error) throw error;
+        if (data.user) {
+          identifyUser(data.user.id, {
+            email: data.user.email,
+            signup_date: new Date().toISOString(),
+          });
+          analytics.signupCompleted({ email: data.user.email });
+        }
         toast.success("Check your email to confirm your account!");
       }
     } catch (error: any) {
