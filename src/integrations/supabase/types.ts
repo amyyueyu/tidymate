@@ -260,6 +260,7 @@ export type Database = {
           status: string
           total_challenges: number
           user_id: string
+          wip_image_url: string | null
         }
         Insert: {
           after_image_url?: string | null
@@ -273,6 +274,7 @@ export type Database = {
           status?: string
           total_challenges?: number
           user_id: string
+          wip_image_url?: string | null
         }
         Update: {
           after_image_url?: string | null
@@ -286,6 +288,7 @@ export type Database = {
           status?: string
           total_challenges?: number
           user_id?: string
+          wip_image_url?: string | null
         }
         Relationships: []
       }
@@ -347,6 +350,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_progress_photo_points: {
+        Args: { p_points: number; p_room_id: string }
+        Returns: undefined
+      }
       check_and_increment_rate_limit: {
         Args: { p_key: string; p_max_calls: number; p_window_seconds: number }
         Returns: boolean
