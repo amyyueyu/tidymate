@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { Sparkles, Leaf, ArrowRight } from "lucide-react";
-import beforeRoom from "@/assets/before-room.jpg";
-import afterRoom from "@/assets/after-room.jpg";
-import beforeBedroom from "@/assets/before-bedroom.jpg";
-import afterBedroom from "@/assets/after-bedroom.jpg";
+const beforeRoom = new URL("@/assets/before-room.jpg", import.meta.url).href;
+const afterRoom = new URL("@/assets/after-room.jpg", import.meta.url).href;
+const beforeBedroom = new URL("@/assets/before-bedroom.jpg", import.meta.url).href;
+const afterBedroom = new URL("@/assets/after-bedroom.jpg", import.meta.url).href;
 import { analytics, identifyUser } from "@/lib/analytics";
 
 const Auth = () => {
@@ -105,6 +105,8 @@ const Auth = () => {
                   <img
                     src={beforeRoom}
                     alt="Cluttered living room"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-[4/3] object-cover" />
                   
                   <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
@@ -118,6 +120,8 @@ const Auth = () => {
                   <img
                     src={afterRoom}
                     alt="Organized living room"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-[4/3] object-cover" />
                   
                   <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
@@ -136,6 +140,8 @@ const Auth = () => {
                   <img
                     src={beforeBedroom}
                     alt="Cluttered bedroom"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-[4/3] object-cover" />
                   
                   <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
@@ -149,6 +155,8 @@ const Auth = () => {
                   <img
                     src={afterBedroom}
                     alt="Organized bedroom"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-[4/3] object-cover" />
                   
                   <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
@@ -202,19 +210,19 @@ const Auth = () => {
           <div className="lg:hidden mb-6">
             <div className="flex items-center justify-center gap-1.5 mb-4">
               <div className="w-10 h-10 rounded-lg overflow-hidden border border-destructive/30">
-                <img src={beforeRoom} alt="Before" className="w-full h-full object-cover" />
+                <img src={beforeRoom} alt="Before" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
               <ArrowRight className="w-3 h-3 text-primary" />
               <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/30">
-                <img src={afterRoom} alt="After" className="w-full h-full object-cover" />
+                <img src={afterRoom} alt="After" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
               <div className="w-2" />
               <div className="w-10 h-10 rounded-lg overflow-hidden border border-destructive/30">
-                <img src={beforeBedroom} alt="Before" className="w-full h-full object-cover" />
+                <img src={beforeBedroom} alt="Before" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
               <ArrowRight className="w-3 h-3 text-primary" />
               <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/30">
-                <img src={afterBedroom} alt="After" className="w-full h-full object-cover" />
+                <img src={afterBedroom} alt="After" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
