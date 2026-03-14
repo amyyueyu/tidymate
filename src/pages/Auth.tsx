@@ -140,6 +140,8 @@ const Auth = () => {
                   <img
                     src={beforeBedroom}
                     alt="Cluttered bedroom"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-[4/3] object-cover" />
                   
                   <div className="absolute bottom-2 left-2 bg-destructive/90 text-destructive-foreground text-[10px] font-medium px-2 py-1 rounded-full">
