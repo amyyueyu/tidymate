@@ -197,7 +197,7 @@ const ChallengePage = () => {
     // for legacy rooms and is only needed when viewing the VisionComparison component.
     const { data: roomData, error: roomError } = await supabase
       .from("rooms")
-      .select("id, name, intent, total_challenges, completed_challenges, status, after_image_url")
+      .select("id, name, intent, total_challenges, completed_challenges, status, after_image_url, wip_image_url")
       .eq("id", roomId)
       .single();
 
@@ -207,6 +207,19 @@ const ChallengePage = () => {
       return;
     }
     setRoom(roomData);
+
+    // Restore praiseData if user already uploaded a progress photo in a prior session
+    if (roomData.wip_image_url) {
+      setPraiseData({
+        praise: "You already made progress on this space. Check out your before and after!",
+        bonusPoints: 0,
+        progressLabel: "Progress saved",
+        shareTagline: "I made real progress with TidyMate.",
+        shareReactionPill: "Progress made",
+        shareSub: "tidymate.app",
+        wipImageUrl: roomData.wip_image_url,
+      });
+    }
 
     const { data: challengeData } = await supabase
       .from("challenges")
