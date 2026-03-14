@@ -515,6 +515,9 @@ const ShareCard = ({
     setShowShareModal(true);
   };
 
+  const shareUrl = "https://tidymate.app";
+  const shareText = shareTagline || "I tidied my space with TidyMate!";
+
   return (
     <div className="space-y-3">
       <div
@@ -535,6 +538,112 @@ const ShareCard = ({
           height={CANVAS_H}
           style={{ width: "100%", height: "auto", display: "block" }}
         />
+
+        {/* Share modal — bottom sheet */}
+        {showShareModal && (
+          <div
+            style={{
+              position: "absolute", inset: 0,
+              background: "rgba(0,0,0,0.5)",
+              display: "flex", alignItems: "flex-end", justifyContent: "center",
+              zIndex: 50,
+            }}
+            onClick={() => setShowShareModal(false)}
+          >
+            <div
+              style={{
+                background: "hsl(var(--card))",
+                borderRadius: "20px 20px 0 0",
+                padding: "24px",
+                width: "100%",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p style={{ fontWeight: 600, fontSize: 15, marginBottom: 16, color: "hsl(var(--foreground))" }}>
+                Share your progress
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Copy link */}
+                <button
+                  onClick={handleCopyLink}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 16px", borderRadius: 12,
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--muted))", cursor: "pointer",
+                    fontSize: 14, color: "hsl(var(--foreground))",
+                  }}
+                >
+                  <Link className="w-4 h-4" />
+                  {linkCopied ? "Link copied!" : "Copy link"}
+                </button>
+
+                {/* X / Twitter */}
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText + " " + shareUrl)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 16px", borderRadius: 12,
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--muted))", cursor: "pointer",
+                    fontSize: 14, color: "hsl(var(--foreground))", textDecoration: "none",
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  Share on X (Twitter)
+                </a>
+
+                {/* Reddit */}
+                <a
+                  href={`https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 16px", borderRadius: 12,
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--muted))", cursor: "pointer",
+                    fontSize: 14, color: "hsl(var(--foreground))", textDecoration: "none",
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF4500">
+                    <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                  </svg>
+                  Share on Reddit (r/ADHD)
+                </a>
+
+                {/* Save image */}
+                <button
+                  onClick={handleDownloadAndShare}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 16px", borderRadius: 12,
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--muted))", cursor: "pointer",
+                    fontSize: 14, color: "hsl(var(--foreground))",
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  Save image to share manually
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{
+                  width: "100%", marginTop: 16, padding: "12px",
+                  borderRadius: 12, border: "none",
+                  background: "transparent",
+                  fontSize: 14, color: "hsl(var(--muted-foreground))", cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2">
@@ -547,12 +656,10 @@ const ShareCard = ({
           <Download className="w-4 h-4" />
           Save image
         </Button>
-        {typeof navigator !== "undefined" && navigator.share && (
-          <Button className="flex-1 gap-2" onClick={handleShare} disabled={drawing}>
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
-        )}
+        <Button className="flex-1 gap-2" onClick={handleShare} disabled={drawing}>
+          <Share2 className="w-4 h-4" />
+          Share
+        </Button>
       </div>
     </div>
   );
