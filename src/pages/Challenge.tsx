@@ -64,6 +64,7 @@ const ChallengePage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { addPoints } = useProfile();
+  const { popChallenge, showerComplete, starBurst } = useConfetti();
   const {
     isGuest,
     guestRoom,
