@@ -350,6 +350,21 @@ const ChallengePage = () => {
     toast.success(`+${bonusPoints} bonus points! 🌟`);
   };
 
+  // Ensure before_image_url is fetched before showing the share card
+  const handleShowShareCard = async () => {
+    if (!isGuest && roomId && room && !room.before_image_url) {
+      const { data } = await supabase
+        .from("rooms")
+        .select("before_image_url")
+        .eq("id", roomId)
+        .single();
+      if (data?.before_image_url) {
+        setRoom((prev) => prev ? { ...prev, before_image_url: data.before_image_url } : prev);
+      }
+    }
+    setShowShareCard(true);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
@@ -456,7 +471,7 @@ const ChallengePage = () => {
                     <Button
                       variant="outline"
                       className="w-full gap-2"
-                      onClick={() => setShowShareCard(true)}
+                      onClick={handleShowShareCard}
                     >
                       <Share2 className="w-4 h-4" />
                       Create shareable card
@@ -701,7 +716,7 @@ const ChallengePage = () => {
                       variant="outline"
                       size="sm"
                       className="w-full gap-2"
-                      onClick={() => setShowShareCard(true)}
+                      onClick={handleShowShareCard}
                     >
                       <Share2 className="w-4 h-4" />
                       Create shareable card

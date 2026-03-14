@@ -17,9 +17,9 @@ interface ShareCardProps {
 const CANVAS_W = 1080;
 const CANVAS_H = 1080;
 const DISPLAY_SCALE = 0.5;
-const SPLIT_Y = 480;
-const BRAND_START = SPLIT_Y + 20;
-const BRAND_COLOR = "#0D9C6B";
+// Photo section: 500px, green section: 580px
+const SPLIT_Y = 500;
+const BRAND_START = SPLIT_Y + 20; // wavy edge pushes brand down ~20px
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(" ");
@@ -38,10 +38,14 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return lines;
 }
 
-async function loadImageCors(url: string): Promise<HTMLImageElement | null> {
+async function loadImageSafe(url: string): Promise<HTMLImageElement | null> {
+  if (!url) return null;
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    // Only set crossOrigin for non-data URLs (data URLs don't need it and it causes errors)
+    if (!url.startsWith("data:")) {
+      img.crossOrigin = "anonymous";
+    }
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = url;
@@ -62,6 +66,92 @@ function drawCoverImage(
   const sx = (img.naturalWidth - sw) / 2;
   const sy = (img.naturalHeight - sh) / 2;
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+function drawImageFallback(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  dx: number,
+  dy: number,
+  dw: number,
+  dh: number,
+  bgColor = "#E8F0EC"
+) {
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(dx, dy, dw, dh);
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.font = "700 28px Nunito, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, dx + dw / 2, dy + dh / 2);
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawLogo(ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1) {
+  const s = scale;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Leaf gradient fill
+  const leafGrad = ctx.createLinearGradient(0, 0, 28 * s, 28 * s);
+  leafGrad.addColorStop(0, "#7DD87A");
+  leafGrad.addColorStop(1, "#0D6B3C");
+
+  ctx.beginPath();
+  ctx.moveTo(14 * s, 2 * s);
+  ctx.bezierCurveTo(6 * s, 2 * s, 1 * s, 8 * s, 1 * s, 14 * s);
+  ctx.bezierCurveTo(1 * s, 21 * s, 6 * s, 27 * s, 14 * s, 27 * s);
+  ctx.bezierCurveTo(21 * s, 27 * s, 27 * s, 21 * s, 27 * s, 14 * s);
+  ctx.bezierCurveTo(27 * s, 6 * s, 21 * s, 2 * s, 14 * s, 2 * s);
+  ctx.closePath();
+  ctx.fillStyle = leafGrad;
+  ctx.fill();
+
+  // White swoosh inside leaf
+  ctx.beginPath();
+  ctx.moveTo(9 * s, 22 * s);
+  ctx.bezierCurveTo(13 * s, 16 * s, 19 * s, 10 * s, 25 * s, 5 * s);
+  ctx.bezierCurveTo(20 * s, 11 * s, 14 * s, 17 * s, 11 * s, 24 * s);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255,255,255,0.65)";
+  ctx.fill();
+
+  // Sparkle stars (top-right of leaf)
+  ctx.fillStyle = "#C5F07A";
+
+  const drawStar = (cx: number, cy: number, r: number) => {
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * Math.PI) / 2;
+      const outerX = cx + Math.cos(angle) * r;
+      const outerY = cy + Math.sin(angle) * r;
+      const innerAngle = angle + Math.PI / 4;
+      const innerX = cx + Math.cos(innerAngle) * (r * 0.35);
+      const innerY = cy + Math.sin(innerAngle) * (r * 0.35);
+      if (i === 0) {
+        ctx.moveTo(outerX, outerY);
+      } else {
+        ctx.lineTo(innerX, innerY);
+      }
+      ctx.lineTo(outerX, outerY);
+    }
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  drawStar(22 * s, 3 * s, 3.5 * s);
+  drawStar(26 * s, 7 * s, 2 * s);
+
+  ctx.restore();
+
+  // "TidyMate" wordmark
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `800 ${22 * s}px 'Nunito', 'Arial Rounded MT Bold', sans-serif`;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.fillText("TidyMate", x + 34 * s, y + 14 * s);
+  ctx.textBaseline = "alphabetic";
 }
 
 async function generateQRDataUrl(text: string, size: number): Promise<string | null> {
@@ -93,7 +183,7 @@ const ShareCard = ({
   const [drawing, setDrawing] = useState(true);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
-  // Preload Nunito fonts
+  // Preload Nunito fonts before drawing
   useEffect(() => {
     const font900 = new FontFace(
       "Nunito",
@@ -111,8 +201,7 @@ const ShareCard = ({
         setFontsLoaded(true);
       })
       .catch(() => {
-        // Fallback — draw with system fonts
-        setFontsLoaded(true);
+        setFontsLoaded(true); // fallback: draw with system fonts
       });
   }, []);
 
@@ -128,31 +217,13 @@ const ShareCard = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Build logo SVG data URL via Blob
-      const logoSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56">
-  <defs>
-    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#7DD87A"/>
-      <stop offset="100%" stop-color="#0D6B3C"/>
-    </linearGradient>
-  </defs>
-  <path d="M28 4 C17 4, 4 12, 4 26 C4 39, 14 50, 28 50 C42 50, 52 40, 52 26 C52 12, 39 4, 28 4 Z" fill="url(#lg)"/>
-  <path d="M18 40 C22 32, 30 22, 46 12 C38 22, 28 34, 24 46 Z" fill="rgba(255,255,255,0.68)"/>
-  <path d="M44 8 L46 4 L48 8 L52 10 L48 12 L46 16 L44 12 L40 10 Z" fill="#C5F07A"/>
-  <path d="M50 14 L51 12 L52 14 L54 15 L52 16 L51 18 L50 16 L48 15 Z" fill="#C5F07A"/>
-  <text x="64" y="37" font-family="Nunito, Arial Rounded MT Bold, sans-serif" font-weight="800" font-size="32" fill="#ffffff" letter-spacing="-0.5">TidyMate</text>
-</svg>`;
-      const svgBlob = new Blob([logoSVG], { type: "image/svg+xml" });
-      const logoUrl = URL.createObjectURL(svgBlob);
-
-      const [beforeImg, afterImg, logoImg, qrDataUrl] = await Promise.all([
-        loadImageCors(beforeImageUrl),
-        loadImageCors(wipImageUrl),
-        loadImageCors(logoUrl),
+      // Load images and QR in parallel
+      const [beforeImg, afterImg, qrDataUrl] = await Promise.all([
+        loadImageSafe(beforeImageUrl),
+        loadImageSafe(wipImageUrl),
         generateQRDataUrl("https://tidymate.app", 120),
       ]);
 
-      URL.revokeObjectURL(logoUrl);
       if (cancelled) return;
 
       // ─── Background ──────────────────────────────────────────────────────────
@@ -168,8 +239,7 @@ const ShareCard = ({
       if (beforeImg) {
         drawCoverImage(ctx, beforeImg, 0, 0, CANVAS_W / 2, SPLIT_Y);
       } else {
-        ctx.fillStyle = "#E5E7EB";
-        ctx.fillRect(0, 0, CANVAS_W / 2, SPLIT_Y);
+        drawImageFallback(ctx, "Before", 0, 0, CANVAS_W / 2, SPLIT_Y, "#D6E4DC");
       }
       ctx.restore();
 
@@ -181,8 +251,7 @@ const ShareCard = ({
       if (afterImg) {
         drawCoverImage(ctx, afterImg, CANVAS_W / 2, 0, CANVAS_W / 2, SPLIT_Y);
       } else {
-        ctx.fillStyle = "#D1FAE5";
-        ctx.fillRect(CANVAS_W / 2, 0, CANVAS_W / 2, SPLIT_Y);
+        drawImageFallback(ctx, "After", CANVAS_W / 2, 0, CANVAS_W / 2, SPLIT_Y, "#B8DFC6");
       }
       ctx.restore();
 
@@ -221,9 +290,11 @@ const ShareCard = ({
       ctx.fillText("AFTER", CANVAS_W / 2 + 14 + labelPadX, labelBottomY - labelPadY);
 
       // ─── Wavy edge overlay ──────────────────────────────────────────────────
-      const waveH = 16;
+      // White wave at SPLIT_Y, amplitude 20px, 6 segments
+      const waveH = 20;
       const segs = 6;
       const segW = CANVAS_W / segs;
+
       ctx.beginPath();
       ctx.moveTo(0, SPLIT_Y);
       for (let i = 1; i <= segs; i++) {
@@ -243,19 +314,16 @@ const ShareCard = ({
       ctx.fill();
 
       // ─── Brand section background ────────────────────────────────────────────
-      ctx.fillStyle = BRAND_COLOR;
+      ctx.fillStyle = "#0D9C6B";
       ctx.fillRect(0, BRAND_START, CANVAS_W, CANVAS_H - BRAND_START);
 
-      // ─── Logo ────────────────────────────────────────────────────────────────
-      if (logoImg) {
-        ctx.drawImage(logoImg, CANVAS_W / 2 - 110, BRAND_START + 28, 220, 44);
-      } else {
-        // Fallback text logo
-        ctx.font = "900 38px Nunito, system-ui, sans-serif";
-        ctx.fillStyle = "#FFFFFF";
-        ctx.textAlign = "center";
-        ctx.fillText("TidyMate", CANVAS_W / 2, BRAND_START + 68);
-      }
+      // ─── Logo (canvas primitives) ─────────────────────────────────────────────
+      // Center the logo: leaf ~38px wide at scale 1.4, wordmark ~180px wide → total ~218px
+      const logoScale = 1.4;
+      const logoTotalW = 34 * logoScale + 130; // leaf width + approx wordmark width
+      const logoX = CANVAS_W / 2 - logoTotalW / 2;
+      const logoY = BRAND_START + 36;
+      drawLogo(ctx, logoX, logoY, logoScale);
 
       // ─── Reaction Pill ───────────────────────────────────────────────────────
       ctx.font = "700 24px Nunito, system-ui, sans-serif";
@@ -267,7 +335,7 @@ const ShareCard = ({
       const pillH = 42;
       const pillW = pillDotSize + pillDotGap + pillTextW + pillPadX * 2;
       const pillX = CANVAS_W / 2 - pillW / 2;
-      const pillY = BRAND_START + 96;
+      const pillY = BRAND_START + 120;
 
       ctx.fillStyle = "rgba(255,255,255,0.18)";
       ctx.beginPath();
@@ -291,7 +359,7 @@ const ShareCard = ({
       const maxTextW = CANVAS_W - 120;
       const taglineLines = wrapText(ctx, shareTagline || "I tidied my space with TidyMate", maxTextW);
       const lineH = 54;
-      const taglineStartY = pillY + pillH + 56;
+      const taglineStartY = BRAND_START + 180;
 
       // Highlight words 3–5 of first line (or quoted phrase)
       const firstLine = taglineLines[0] ?? "";
@@ -306,7 +374,6 @@ const ShareCard = ({
         }
       }
 
-      // Draw highlight box for first line
       if (highlightText) {
         const beforeHighlight = firstLine.substring(0, firstLine.indexOf(highlightText));
         const beforeW = ctx.measureText(beforeHighlight).width;
@@ -319,14 +386,15 @@ const ShareCard = ({
         ctx.fill();
       }
 
-      // Draw tagline text
+      // Draw tagline (up to 3 lines)
       ctx.fillStyle = "#FFFFFF";
-      taglineLines.slice(0, 2).forEach((line, i) => {
+      taglineLines.slice(0, 3).forEach((line, i) => {
         ctx.fillText(line, CANVAS_W / 2, taglineStartY + i * lineH);
       });
 
       // ─── Sub Line ────────────────────────────────────────────────────────────
-      const subY = taglineStartY + Math.min(taglineLines.length, 2) * lineH + 28;
+      const taglineBottom = taglineStartY + Math.min(taglineLines.length, 3) * lineH;
+      const subY = Math.max(taglineBottom + 40, BRAND_START + 360);
       ctx.font = "600 26px Nunito, system-ui, sans-serif";
       ctx.fillStyle = "rgba(255,255,255,0.72)";
       const subLines = wrapText(ctx, shareSub || "Something shifted today.", maxTextW);
@@ -334,32 +402,48 @@ const ShareCard = ({
         ctx.fillText(line, CANVAS_W / 2, subY + i * 36);
       });
 
+      // ─── Divider line in brand section ───────────────────────────────────────
+      const dividerY = BRAND_START + 430;
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(60, dividerY);
+      ctx.lineTo(CANVAS_W - 60, dividerY);
+      ctx.stroke();
+
       // ─── Bottom row ──────────────────────────────────────────────────────────
-      const bottomY = CANVAS_H - 72;
+      const tryItY = BRAND_START + 460;
+      const urlY = BRAND_START + 500;
 
       // "TRY IT FREE" label
       ctx.font = "600 20px Nunito, system-ui, sans-serif";
       ctx.fillStyle = "rgba(255,255,255,0.55)";
       ctx.textAlign = "center";
-      ctx.fillText("TRY IT FREE", CANVAS_W / 2, bottomY - 38);
+      ctx.fillText("TRY IT FREE", CANVAS_W / 2, tryItY);
 
       // tidymate.app
       ctx.font = "800 32px Nunito, system-ui, sans-serif";
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText("tidymate.app", CANVAS_W / 2, bottomY);
+      ctx.fillText("tidymate.app", CANVAS_W / 2, urlY);
 
       // QR Code (right side)
       if (qrDataUrl) {
-        const qrImg = await loadImageCors(qrDataUrl);
+        const qrImg = await loadImageSafe(qrDataUrl);
         if (qrImg && !cancelled) {
           const qrSize = 130;
-          const qrX = CANVAS_W - 170;
-          const qrY = CANVAS_H - qrSize - 36;
+          const qrX = CANVAS_W - 160;
+          const qrY = BRAND_START + 430;
+          // White rounded background
           ctx.fillStyle = "#FFFFFF";
           ctx.beginPath();
           ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12);
           ctx.fill();
           ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+          // "SCAN ME" label
+          ctx.font = "600 18px Nunito, system-ui, sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          ctx.textAlign = "center";
+          ctx.fillText("SCAN ME", qrX + qrSize / 2, qrY + qrSize + 26);
         }
       }
 
