@@ -14,6 +14,8 @@ const FALLBACK = {
   bonusPoints: 20,
   progressLabel: "Progress made",
   shareTagline: "I tidied my space with TidyMate",
+  shareReactionPill: "ADHD win unlocked",
+  shareSub: "Something shifted today. Might clean again next year.",
 };
 
 serve(async (req) => {

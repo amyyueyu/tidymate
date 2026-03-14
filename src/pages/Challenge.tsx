@@ -88,6 +88,8 @@ const ChallengePage = () => {
     bonusPoints: number;
     progressLabel: string;
     shareTagline: string;
+    shareReactionPill: string;
+    shareSub: string;
     wipImageUrl: string;
   } | null>(null);
   const [showShareCard, setShowShareCard] = useState(false);

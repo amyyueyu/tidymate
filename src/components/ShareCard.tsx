@@ -7,6 +7,8 @@ interface ShareCardProps {
   beforeImageUrl: string;
   wipImageUrl: string;
   shareTagline: string;
+  shareReactionPill: string;
+  shareSub: string;
   sessionMinutes: number;
   roomName: string;
   roomId?: string;
@@ -16,6 +18,7 @@ const CANVAS_W = 1080;
 const CANVAS_H = 1080;
 const DISPLAY_SCALE = 0.5;
 const SPLIT_Y = 480;
+const BRAND_START = SPLIT_Y + 20;
 const BRAND_COLOR = "#0D9C6B";
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
@@ -33,18 +36,6 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   }
   if (current) lines.push(current);
   return lines;
-}
-
-function drawLeaf(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - size);
-  ctx.bezierCurveTo(cx + size * 0.8, cy - size * 0.4, cx + size * 0.8, cy + size * 0.4, cx, cy + size);
-  ctx.bezierCurveTo(cx - size * 0.8, cy + size * 0.4, cx - size * 0.8, cy - size * 0.4, cx, cy - size);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
 }
 
 async function loadImageCors(url: string): Promise<HTMLImageElement | null> {
@@ -75,7 +66,6 @@ function drawCoverImage(
 
 async function generateQRDataUrl(text: string, size: number): Promise<string | null> {
   try {
-    // Dynamically import qrcode via CDN
     const QRCode = await import("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm" as any);
     const dataUrl: string = await QRCode.toDataURL(text, {
       width: size,
@@ -93,14 +83,42 @@ const ShareCard = ({
   beforeImageUrl,
   wipImageUrl,
   shareTagline,
+  shareReactionPill,
+  shareSub,
   sessionMinutes,
   roomName,
   roomId,
 }: ShareCardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(true);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  // Preload Nunito fonts
+  useEffect(() => {
+    const font900 = new FontFace(
+      "Nunito",
+      "url(https://fonts.gstatic.com/s/nunito/v25/XRXI3I6Li01BKofiOc5wtlZ2di8HDDqhSOQ.woff2)",
+      { weight: "900" }
+    );
+    const font700 = new FontFace(
+      "Nunito",
+      "url(https://fonts.gstatic.com/s/nunito/v25/XRXI3I6Li01BKofiOc5wtlZ2di8HFjqhSOQ.woff2)",
+      { weight: "700" }
+    );
+    Promise.all([font900.load(), font700.load()])
+      .then((fonts) => {
+        fonts.forEach((f) => document.fonts.add(f));
+        setFontsLoaded(true);
+      })
+      .catch(() => {
+        // Fallback — draw with system fonts
+        setFontsLoaded(true);
+      });
+  }, []);
 
   useEffect(() => {
+    if (!fontsLoaded) return;
+
     let cancelled = false;
     setDrawing(true);
 
@@ -110,19 +128,39 @@ const ShareCard = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const [beforeImg, afterImg, qrDataUrl] = await Promise.all([
+      // Build logo SVG data URL via Blob
+      const logoSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56">
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7DD87A"/>
+      <stop offset="100%" stop-color="#0D6B3C"/>
+    </linearGradient>
+  </defs>
+  <path d="M28 4 C17 4, 4 12, 4 26 C4 39, 14 50, 28 50 C42 50, 52 40, 52 26 C52 12, 39 4, 28 4 Z" fill="url(#lg)"/>
+  <path d="M18 40 C22 32, 30 22, 46 12 C38 22, 28 34, 24 46 Z" fill="rgba(255,255,255,0.68)"/>
+  <path d="M44 8 L46 4 L48 8 L52 10 L48 12 L46 16 L44 12 L40 10 Z" fill="#C5F07A"/>
+  <path d="M50 14 L51 12 L52 14 L54 15 L52 16 L51 18 L50 16 L48 15 Z" fill="#C5F07A"/>
+  <text x="64" y="37" font-family="Nunito, Arial Rounded MT Bold, sans-serif" font-weight="800" font-size="32" fill="#ffffff" letter-spacing="-0.5">TidyMate</text>
+</svg>`;
+      const svgBlob = new Blob([logoSVG], { type: "image/svg+xml" });
+      const logoUrl = URL.createObjectURL(svgBlob);
+
+      const [beforeImg, afterImg, logoImg, qrDataUrl] = await Promise.all([
         loadImageCors(beforeImageUrl),
         loadImageCors(wipImageUrl),
+        loadImageCors(logoUrl),
         generateQRDataUrl("https://tidymate.app", 120),
       ]);
 
+      URL.revokeObjectURL(logoUrl);
       if (cancelled) return;
 
-      // Background
+      // ─── Background ──────────────────────────────────────────────────────────
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-      // Left image — before
+      // ─── Photos (clipped halves) ─────────────────────────────────────────────
+      // Left (before)
       ctx.save();
       ctx.beginPath();
       ctx.rect(0, 0, CANVAS_W / 2, SPLIT_Y);
@@ -135,7 +173,7 @@ const ShareCard = ({
       }
       ctx.restore();
 
-      // Right image — after/in progress
+      // Right (after/wip)
       ctx.save();
       ctx.beginPath();
       ctx.rect(CANVAS_W / 2, 0, CANVAS_W / 2, SPLIT_Y);
@@ -148,68 +186,175 @@ const ShareCard = ({
       }
       ctx.restore();
 
-      // Divider line
-      ctx.strokeStyle = "#E5E7EB";
-      ctx.lineWidth = 4;
+      // ─── Divider line ────────────────────────────────────────────────────────
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(CANVAS_W / 2, 0);
       ctx.lineTo(CANVAS_W / 2, SPLIT_Y);
       ctx.stroke();
 
-      // BEFORE label
-      const labelPadX = 14;
-      const labelPadY = 8;
-      const labelY = SPLIT_Y - 44;
-      ctx.font = "bold 22px system-ui, sans-serif";
-      const beforeW = ctx.measureText("BEFORE").width;
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      // ─── BEFORE / AFTER labels ──────────────────────────────────────────────
+      const labelFont = "bold 26px Nunito, system-ui, sans-serif";
+      ctx.font = labelFont;
+      const labelPadX = 18;
+      const labelPadY = 9;
+      const labelH = 34;
+      const labelBottomY = SPLIT_Y - 18;
+
+      // BEFORE
+      const beforeLabelW = ctx.measureText("BEFORE").width;
+      ctx.fillStyle = "#1A1A1A";
       ctx.beginPath();
-      ctx.roundRect(16, labelY, beforeW + labelPadX * 2, 34, 8);
+      ctx.roundRect(14, labelBottomY - labelH, beforeLabelW + labelPadX * 2, labelH, 6);
       ctx.fill();
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText("BEFORE", 16 + labelPadX, labelY + 24);
+      ctx.fillText("BEFORE", 14 + labelPadX, labelBottomY - labelPadY);
 
-      // AFTER label
-      const afterLabel = "AFTER";
-      const afterW = ctx.measureText(afterLabel).width;
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      // AFTER
+      const afterLabelW = ctx.measureText("AFTER").width;
+      ctx.fillStyle = "#0D9C6B";
       ctx.beginPath();
-      ctx.roundRect(CANVAS_W / 2 + 16, labelY, afterW + labelPadX * 2, 34, 8);
+      ctx.roundRect(CANVAS_W / 2 + 14, labelBottomY - labelH, afterLabelW + labelPadX * 2, labelH, 6);
       ctx.fill();
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(afterLabel, CANVAS_W / 2 + 16 + labelPadX, labelY + 24);
+      ctx.fillText("AFTER", CANVAS_W / 2 + 14 + labelPadX, labelBottomY - labelPadY);
 
-      // Brand section background
+      // ─── Wavy edge overlay ──────────────────────────────────────────────────
+      const waveH = 16;
+      const segs = 6;
+      const segW = CANVAS_W / segs;
+      ctx.beginPath();
+      ctx.moveTo(0, SPLIT_Y);
+      for (let i = 1; i <= segs; i++) {
+        const x = i * segW;
+        const y = SPLIT_Y + (i % 2 === 0 ? 0 : waveH);
+        ctx.quadraticCurveTo(
+          x - segW / 2,
+          SPLIT_Y + (i % 2 !== 0 ? 0 : waveH),
+          x,
+          y
+        );
+      }
+      ctx.lineTo(CANVAS_W, SPLIT_Y + waveH + 20);
+      ctx.lineTo(0, SPLIT_Y + waveH + 20);
+      ctx.closePath();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+
+      // ─── Brand section background ────────────────────────────────────────────
       ctx.fillStyle = BRAND_COLOR;
-      ctx.fillRect(0, SPLIT_Y, CANVAS_W, CANVAS_H - SPLIT_Y);
+      ctx.fillRect(0, BRAND_START, CANVAS_W, CANVAS_H - BRAND_START);
 
-      // Leaf icon
-      drawLeaf(ctx, CANVAS_W / 2, SPLIT_Y + 70, 28);
+      // ─── Logo ────────────────────────────────────────────────────────────────
+      if (logoImg) {
+        ctx.drawImage(logoImg, CANVAS_W / 2 - 110, BRAND_START + 28, 220, 44);
+      } else {
+        // Fallback text logo
+        ctx.font = "900 38px Nunito, system-ui, sans-serif";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText("TidyMate", CANVAS_W / 2, BRAND_START + 68);
+      }
 
-      // Tagline
-      ctx.font = "bold 52px system-ui, sans-serif";
+      // ─── Reaction Pill ───────────────────────────────────────────────────────
+      ctx.font = "700 24px Nunito, system-ui, sans-serif";
+      const pillText = (shareReactionPill || "ADHD win unlocked").toUpperCase();
+      const pillTextW = ctx.measureText(pillText).width;
+      const pillDotSize = 8;
+      const pillDotGap = 14;
+      const pillPadX = 20;
+      const pillH = 42;
+      const pillW = pillDotSize + pillDotGap + pillTextW + pillPadX * 2;
+      const pillX = CANVAS_W / 2 - pillW / 2;
+      const pillY = BRAND_START + 96;
+
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.roundRect(pillX, pillY, pillW, pillH, pillH / 2);
+      ctx.fill();
+
+      // Dot
+      ctx.fillStyle = "#B5F5D8";
+      ctx.beginPath();
+      ctx.arc(pillX + pillPadX + pillDotSize / 2, pillY + pillH / 2, pillDotSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pill text
       ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "left";
+      ctx.fillText(pillText, pillX + pillPadX + pillDotSize + pillDotGap, pillY + pillH / 2 + 9);
+
+      // ─── Main Tagline ────────────────────────────────────────────────────────
+      ctx.font = "900 42px Nunito, system-ui, sans-serif";
       ctx.textAlign = "center";
-      const lines = wrapText(ctx, shareTagline, CANVAS_W - 120);
-      const lineHeight = 66;
-      const taglineStartY = SPLIT_Y + 140;
-      lines.slice(0, 2).forEach((line, i) => {
-        ctx.fillText(line, CANVAS_W / 2, taglineStartY + i * lineHeight);
+      const maxTextW = CANVAS_W - 120;
+      const taglineLines = wrapText(ctx, shareTagline || "I tidied my space with TidyMate", maxTextW);
+      const lineH = 54;
+      const taglineStartY = pillY + pillH + 56;
+
+      // Highlight words 3–5 of first line (or quoted phrase)
+      const firstLine = taglineLines[0] ?? "";
+      let highlightText = "";
+      const quotedMatch = firstLine.match(/"([^"]+)"|'([^']+)'|\(([^)]+)\)/);
+      if (quotedMatch) {
+        highlightText = quotedMatch[0];
+      } else {
+        const words = firstLine.split(" ");
+        if (words.length >= 3) {
+          highlightText = words.slice(2, Math.min(5, words.length)).join(" ");
+        }
+      }
+
+      // Draw highlight box for first line
+      if (highlightText) {
+        const beforeHighlight = firstLine.substring(0, firstLine.indexOf(highlightText));
+        const beforeW = ctx.measureText(beforeHighlight).width;
+        const hlW = ctx.measureText(highlightText).width;
+        const fullLineW = ctx.measureText(firstLine).width;
+        const lineStartX = CANVAS_W / 2 - fullLineW / 2;
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.beginPath();
+        ctx.roundRect(lineStartX + beforeW - 6, taglineStartY - 40, hlW + 12, 52, 8);
+        ctx.fill();
+      }
+
+      // Draw tagline text
+      ctx.fillStyle = "#FFFFFF";
+      taglineLines.slice(0, 2).forEach((line, i) => {
+        ctx.fillText(line, CANVAS_W / 2, taglineStartY + i * lineH);
       });
 
-      // tidymate.app text
-      ctx.font = "28px system-ui, sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      ctx.fillText("tidymate.app", CANVAS_W / 2, taglineStartY + Math.min(lines.length, 2) * lineHeight + 52);
+      // ─── Sub Line ────────────────────────────────────────────────────────────
+      const subY = taglineStartY + Math.min(taglineLines.length, 2) * lineH + 28;
+      ctx.font = "600 26px Nunito, system-ui, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      const subLines = wrapText(ctx, shareSub || "Something shifted today.", maxTextW);
+      subLines.slice(0, 2).forEach((line, i) => {
+        ctx.fillText(line, CANVAS_W / 2, subY + i * 36);
+      });
 
-      // QR Code
+      // ─── Bottom row ──────────────────────────────────────────────────────────
+      const bottomY = CANVAS_H - 72;
+
+      // "TRY IT FREE" label
+      ctx.font = "600 20px Nunito, system-ui, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.textAlign = "center";
+      ctx.fillText("TRY IT FREE", CANVAS_W / 2, bottomY - 38);
+
+      // tidymate.app
+      ctx.font = "800 32px Nunito, system-ui, sans-serif";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText("tidymate.app", CANVAS_W / 2, bottomY);
+
+      // QR Code (right side)
       if (qrDataUrl) {
         const qrImg = await loadImageCors(qrDataUrl);
         if (qrImg && !cancelled) {
           const qrSize = 130;
-          const qrX = CANVAS_W / 2 - qrSize / 2;
-          const qrY = CANVAS_H - qrSize - 40;
-          // White background for QR
+          const qrX = CANVAS_W - 170;
+          const qrY = CANVAS_H - qrSize - 36;
           ctx.fillStyle = "#FFFFFF";
           ctx.beginPath();
           ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12);
@@ -223,8 +368,10 @@ const ShareCard = ({
     };
 
     draw().catch(console.error);
-    return () => { cancelled = true; };
-  }, [beforeImageUrl, wipImageUrl, shareTagline]);
+    return () => {
+      cancelled = true;
+    };
+  }, [beforeImageUrl, wipImageUrl, shareTagline, shareReactionPill, shareSub, fontsLoaded]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;
@@ -264,7 +411,10 @@ const ShareCard = ({
 
   return (
     <div className="space-y-3">
-      <div className="relative rounded-xl overflow-hidden shadow-lg" style={{ width: CANVAS_W * DISPLAY_SCALE, maxWidth: "100%" }}>
+      <div
+        className="relative rounded-xl overflow-hidden shadow-lg"
+        style={{ width: CANVAS_W * DISPLAY_SCALE, maxWidth: "100%" }}
+      >
         {drawing && (
           <div
             className="absolute inset-0 flex items-center justify-center bg-muted/80 z-10"
@@ -292,11 +442,7 @@ const ShareCard = ({
           Save image
         </Button>
         {typeof navigator !== "undefined" && navigator.share && (
-          <Button
-            className="flex-1 gap-2"
-            onClick={handleShare}
-            disabled={drawing}
-          >
+          <Button className="flex-1 gap-2" onClick={handleShare} disabled={drawing}>
             <Share2 className="w-4 h-4" />
             Share
           </Button>
