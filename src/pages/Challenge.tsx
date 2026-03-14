@@ -36,6 +36,7 @@ import ShareCard from "@/components/ShareCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
+import { useConfetti } from "@/hooks/useConfetti";
 
 interface Challenge {
   id: string;
@@ -63,6 +64,7 @@ const ChallengePage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { addPoints } = useProfile();
+  const { popChallenge, showerComplete, starBurst } = useConfetti();
   const {
     isGuest,
     guestRoom,
@@ -280,8 +282,10 @@ const ChallengePage = () => {
     if (isLast) {
       analytics.roomFinished({ room_type: room.intent, tasks_completed: newCompletedCount });
       toast.success("🏆 Amazing! You've completed all challenges!");
+      showerComplete();
       setSessionComplete(true);
     } else {
+      popChallenge();
       const nextIndex = currentChallengeIndex + 1;
       setCurrentChallengeIndex(nextIndex);
       setTimeRemaining(challenges[nextIndex].time_estimate_minutes * 60);
@@ -335,6 +339,7 @@ const ChallengePage = () => {
   ) => {
     setPraiseData({ praise, bonusPoints, progressLabel, shareTagline, shareReactionPill, shareSub, wipImageUrl });
     setShowProgressUpload(false);
+    starBurst();
 
     if (!isGuest && user && roomId) {
       try {
