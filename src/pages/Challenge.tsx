@@ -466,6 +466,8 @@ const ChallengePage = () => {
                       beforeImageUrl={room?.before_image_url ?? ""}
                       wipImageUrl={praiseData.wipImageUrl}
                       shareTagline={praiseData.shareTagline}
+                      shareReactionPill={praiseData.shareReactionPill}
+                      shareSub={praiseData.shareSub}
                       sessionMinutes={Math.round((Date.now() - sessionStartTime) / 60000)}
                       roomName={room?.name ?? "My Space"}
                       roomId={roomId}
