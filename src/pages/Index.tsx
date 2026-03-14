@@ -118,9 +118,11 @@ const Index = () => {
         <div className="grid grid-cols-3 gap-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <Card className="border-0 shadow-sm bg-streak/10">
             <CardContent className="p-4 text-center">
-              <Flame className="w-6 h-6 text-streak mx-auto" />
+              <Flame className={`w-6 h-6 mx-auto ${profile.current_streak > 0 ? "text-streak" : "text-muted-foreground"}`} />
               <p className="text-2xl font-bold mt-1">{profile.current_streak}</p>
-              <p className="text-xs text-muted-foreground">Day Streak</p>
+              <p className="text-xs text-muted-foreground">
+                {profile.current_streak === 0 ? "Start today" : "Day Streak"}
+              </p>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm bg-points/10">

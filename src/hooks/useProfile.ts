@@ -72,17 +72,25 @@
     });
 
     if (error) {
-      console.error("Error adding points:", error);
+      console.error("Error adding points via RPC:", error);
       throw error;
     }
 
-    // Re-fetch profile so local state reflects the server-computed values
+    // Re-fetch so local state reflects server-computed streak + level
     const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (data) setProfile(data);
+
+    if (data) {
+      console.log("Profile after points update:", {
+        total_points: data.total_points,
+        current_streak: data.current_streak,
+        last_activity_date: data.last_activity_date,
+      });
+      setProfile(data);
+    }
   };
  
    return { profile, loading, updateProfile, addPoints };
