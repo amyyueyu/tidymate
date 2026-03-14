@@ -86,4 +86,8 @@ export const analytics = {
 
   shareClicked: (properties?: { source_channel?: string }) =>
     posthog.capture("share_clicked", properties),
+
+  /** TODO: Remove after verifying PostHog integration */
+  testEvent: () =>
+    posthog.capture("posthog_test_event"),
 };

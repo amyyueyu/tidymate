@@ -36,6 +36,7 @@ const Index = () => {
 
   useEffect(() => {
     analytics.landingView();
+    analytics.testEvent();
   }, []);
 
   useEffect(() => {
