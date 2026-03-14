@@ -53,6 +53,7 @@ interface Room {
   name: string;
   before_image_url?: string;
   after_image_url: string | null;
+  wip_image_url?: string | null;
   intent: string;
   total_challenges: number;
   completed_challenges: number;
