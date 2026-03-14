@@ -37,6 +37,7 @@ const ProgressPhotoUpload = ({
   onPraiseReceived,
 }: ProgressPhotoUploadProps) => {
   const { user } = useAuth();
+  const { updateGuestRoom } = useGuestMode();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
