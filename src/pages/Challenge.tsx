@@ -25,8 +25,14 @@ import {
   Circle,
   FastForward,
   UserPlus,
+  Camera,
+  Download,
+  Share2,
 } from "lucide-react";
 import VisionComparison from "@/components/VisionComparison";
+import ProgressPhotoUpload from "@/components/ProgressPhotoUpload";
+import PraiseCard from "@/components/PraiseCard";
+import ShareCard from "@/components/ShareCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
