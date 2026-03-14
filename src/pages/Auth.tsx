@@ -120,6 +120,8 @@ const Auth = () => {
                   <img
                     src={afterRoom}
                     alt="Organized living room"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-[4/3] object-cover" />
                   
                   <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
