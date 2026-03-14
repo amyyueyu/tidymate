@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { Sparkles, Leaf, ArrowRight } from "lucide-react";
-import beforeRoom from "@/assets/before-room.jpg";
-import afterRoom from "@/assets/after-room.jpg";
-import beforeBedroom from "@/assets/before-bedroom.jpg";
-import afterBedroom from "@/assets/after-bedroom.jpg";
+const beforeRoom = new URL("@/assets/before-room.jpg", import.meta.url).href;
+const afterRoom = new URL("@/assets/after-room.jpg", import.meta.url).href;
+const beforeBedroom = new URL("@/assets/before-bedroom.jpg", import.meta.url).href;
+const afterBedroom = new URL("@/assets/after-bedroom.jpg", import.meta.url).href;
 import { analytics, identifyUser } from "@/lib/analytics";
 
 const Auth = () => {
