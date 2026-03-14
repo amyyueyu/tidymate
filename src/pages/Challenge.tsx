@@ -81,6 +81,18 @@ const ChallengePage = () => {
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
 
+  // Progress photo & sharing state
+  const [showProgressUpload, setShowProgressUpload] = useState(false);
+  const [praiseData, setPraiseData] = useState<{
+    praise: string;
+    bonusPoints: number;
+    progressLabel: string;
+    shareTagline: string;
+    wipImageUrl: string;
+  } | null>(null);
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [sessionStartTime] = useState(() => Date.now());
+
   // Refs to avoid stale closures in timer and to gate guest hydration
   const challengesRef = useRef<Challenge[]>([]);
   const challengeIndexRef = useRef(0);
