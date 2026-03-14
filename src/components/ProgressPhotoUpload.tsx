@@ -19,6 +19,8 @@ interface ProgressPhotoUploadProps {
     bonusPoints: number,
     progressLabel: string,
     shareTagline: string,
+    shareReactionPill: string,
+    shareSub: string,
     wipImageUrl: string
   ) => void;
 }
