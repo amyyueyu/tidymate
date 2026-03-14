@@ -410,7 +410,67 @@ const ChallengePage = () => {
               </CardContent>
             </Card>
           ) : (
-            <Button onClick={() => navigate("/")}>Back to Home</Button>
+            <div className="space-y-4 w-full animate-fade-in">
+              {!praiseData ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-4 space-y-3">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Capture your transformation — optional but satisfying!
+                    </p>
+                    {showProgressUpload ? (
+                      <ProgressPhotoUpload
+                        roomId={roomId!}
+                        roomName={room?.name ?? "My Space"}
+                        intent={room?.intent ?? "tidy"}
+                        beforeImageUrl={room?.before_image_url ?? ""}
+                        completedChallenges={completedCount}
+                        totalChallenges={challenges.length}
+                        isGuest={false}
+                        onPraiseReceived={handlePraiseReceived}
+                      />
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => setShowProgressUpload(true)}
+                      >
+                        <Camera className="w-4 h-4" />
+                        Upload your after photo
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  <PraiseCard
+                    praise={praiseData.praise}
+                    bonusPoints={praiseData.bonusPoints}
+                    progressLabel={praiseData.progressLabel}
+                    isVisible={true}
+                  />
+                  {!showShareCard ? (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => setShowShareCard(true)}
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Create shareable card
+                    </Button>
+                  ) : (
+                    <ShareCard
+                      beforeImageUrl={room?.before_image_url ?? ""}
+                      wipImageUrl={praiseData.wipImageUrl}
+                      shareTagline={praiseData.shareTagline}
+                      sessionMinutes={Math.round((Date.now() - sessionStartTime) / 60000)}
+                      roomName={room?.name ?? "My Space"}
+                      roomId={roomId}
+                    />
+                  )}
+                </div>
+              )}
+              <Button onClick={() => navigate("/")}>Back to Home</Button>
+            </div>
           )}
         </div>
       </div>
