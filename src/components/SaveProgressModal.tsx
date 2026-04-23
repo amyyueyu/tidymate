@@ -2,7 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "@/components/ui/sonner";
 import { Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { analytics } from "@/lib/analytics";
 
 interface SaveProgressModalProps {
   open: boolean;
@@ -21,10 +22,15 @@ const SaveProgressModal = ({
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (open) analytics.guestSignupPromptShown({ trigger: "other" });
+  }, [open]);
+
   if (!open) return null;
 
   const handleGoogle = async () => {
     setLoading(true);
+    analytics.guestConvertedToSignup({ method: "google" });
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -35,6 +41,7 @@ const SaveProgressModal = ({
   };
 
   const handleCreateAccount = () => {
+    analytics.guestConvertedToSignup({ method: "email" });
     navigate("/auth?signup=1");
   };
 
