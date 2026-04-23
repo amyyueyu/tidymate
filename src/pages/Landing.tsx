@@ -88,6 +88,37 @@ const Landing = () => {
             {t('landing.no.signup')}
           </p>
 
+          {/* Before / After demo */}
+          <div className="mt-10">
+            <p className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              {t('landing.demo.title')}
+            </p>
+            <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden shadow-xl shadow-foreground/5 border border-foreground/5 bg-background">
+              <div className="relative aspect-square">
+                <img
+                  src={beforeImg}
+                  alt="Messy room before TidyMate"
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wide bg-foreground/80 text-background px-2 py-0.5 rounded-full">
+                  {t('landing.demo.before')}
+                </span>
+              </div>
+              <div className="relative aspect-square">
+                <img
+                  src={afterImg}
+                  alt="Tidy room after TidyMate"
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wide bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                  {t('landing.demo.after')}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Mini value props */}
           <div className="grid grid-cols-3 gap-2 mt-10">
             <div className="text-center">
