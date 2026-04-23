@@ -14,6 +14,7 @@ import {
 import { getBadgeForLevel } from "@/lib/levelBadges";
 import { LangToggle } from "@/components/LangToggle";
 import { useLang } from "@/contexts/LanguageContext";
+import Landing from "./Landing";
 
 const GREETINGS = [
   "No pressure. Even 10 minutes counts.",
@@ -58,11 +59,8 @@ const Index = () => {
     analytics.testEvent();
   }, []);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/landing", { replace: true });
-    }
-  }, [user, authLoading, navigate]);
+  // Unauthenticated visitors see the guest landing experience at "/"
+  // (no redirect, so tidymate.app keeps showing the new landing page)
 
   useEffect(() => {
     if (user) {
@@ -113,7 +111,7 @@ const Index = () => {
     }
   };
 
-  if (authLoading || profileLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -124,7 +122,19 @@ const Index = () => {
     );
   }
 
-  if (!user || !profile) return null;
+  // Show guest landing experience at "/" for unauthenticated visitors
+  if (!user) return <Landing />;
+
+  if (profileLoading || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Leaf className="w-12 h-12 text-primary mx-auto animate-gentle-bounce" />
+          <p className="mt-4 text-muted-foreground">Loading your space...</p>
+        </div>
+      </div>
+    );
+  }
 
   const levelProgress = profile.total_points % 100;
   const pointsToNextLevel = 100 - levelProgress;
