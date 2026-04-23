@@ -312,6 +312,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'decide.done.title':       '都决定好了！🎉',
     'decide.done.sub':         '你处理了 {count} 件物品，这就是真正的进展。',
     'decide.done.cta':         '返回首页',
+  }
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
