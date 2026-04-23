@@ -25,7 +25,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'landing.guest.badge':  'Guest mode',
     'landing.signin.link':  'Sign in',
     'landing.hero.title':   'Transform chaos into calm, one tiny task at a time.',
-    'landing.hero.sub':     'No accounts. No overwhelm. Snap a photo of any messy corner and AI breaks it into 5-minute wins.',
+    'landing.hero.sub':     'No overwhelm. Snap a photo of any messy corner and AI breaks it into 5-minute wins.',
     'landing.cta.title':    'Capture a space',
     'landing.cta.sub':      'Take or upload a photo to start',
     'landing.no.signup':    'No sign-up needed to try.',
