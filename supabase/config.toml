@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.analyze-progress]
 verify_jwt = false
+
+[functions.analyze-items]
+verify_jwt = false
