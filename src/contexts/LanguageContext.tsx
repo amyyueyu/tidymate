@@ -157,6 +157,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'landing.prop2':        'AI 帮你拆解',
     'landing.prop3':        '5分钟小任务',
     'landing.footer.account':'已经有账户了？',
+    'landing.demo.title':   '看看蜕变前后',
+    'landing.demo.before':  '之前',
+    'landing.demo.after':   '之后',
 
     'auth.welcome':      '欢迎回来',
     'auth.welcome.sub':  '登录继续你的整理之旅',
