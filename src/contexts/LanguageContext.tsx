@@ -21,7 +21,19 @@ export const translations: Record<Lang, Record<string, string>> = {
     'landing.benefit3': '📸 Save every before & after — your visual record',
     'landing.benefit4': '🔁 Pick up exactly where you left off, every time',
 
-    // Auth right panel
+    // Landing (guest homepage)
+    'landing.guest.badge':  'Guest mode',
+    'landing.signin.link':  'Sign in',
+    'landing.hero.title':   'Transform chaos into calm, one tiny task at a time.',
+    'landing.hero.sub':     'No accounts. No overwhelm. Snap a photo of any messy corner and AI breaks it into 5-minute wins.',
+    'landing.cta.title':    'Capture a space',
+    'landing.cta.sub':      'Take or upload a photo to start',
+    'landing.no.signup':    'No sign-up needed to try.',
+    'landing.prop1':        'Snap any room',
+    'landing.prop2':        'AI breaks it down',
+    'landing.prop3':        'Tiny 5-min tasks',
+    'landing.footer.account':'Already have an account?',
+
     'auth.welcome':      'Welcome back',
     'auth.welcome.sub':  'Sign in to continue your journey',
     'auth.start':        'Get started',
@@ -130,7 +142,19 @@ export const translations: Record<Lang, Record<string, string>> = {
     'landing.benefit3': '📸 保存每次的前后对比照片',
     'landing.benefit4': '🔁 随时回来，从上次中断的地方继续',
 
-    // Auth right panel
+    // Landing (guest homepage)
+    'landing.guest.badge':  '访客模式',
+    'landing.signin.link':  '登录',
+    'landing.hero.title':   '把混乱变成平静，从一个小任务开始。',
+    'landing.hero.sub':     '无需账号，没有压力。拍下任何凌乱的角落，AI会把它拆解成5分钟的小任务。',
+    'landing.cta.title':    '拍一个空间',
+    'landing.cta.sub':      '拍照或上传一张照片即可开始',
+    'landing.no.signup':    '无需注册即可体验。',
+    'landing.prop1':        '拍下任何房间',
+    'landing.prop2':        'AI 帮你拆解',
+    'landing.prop3':        '5分钟小任务',
+    'landing.footer.account':'已经有账户了？',
+
     'auth.welcome':      '欢迎回来',
     'auth.welcome.sub':  '登录继续你的整理之旅',
     'auth.start':        '免费开始',
