@@ -146,7 +146,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'landing.guest.badge':  '访客模式',
     'landing.signin.link':  '登录',
     'landing.hero.title':   '把混乱变成平静，从一个小任务开始。',
-    'landing.hero.sub':     '无需账号，没有压力。拍下任何凌乱的角落，AI会把它拆解成5分钟的小任务。',
+    'landing.hero.sub':     '没有压力。拍下任何凌乱的角落，AI会把它拆解成5分钟的小任务。',
     'landing.cta.title':    '拍一个空间',
     'landing.cta.sub':      '拍照或上传一张照片即可开始',
     'landing.no.signup':    '无需注册即可体验。',
