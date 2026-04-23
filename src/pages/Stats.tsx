@@ -288,6 +288,8 @@ const Stats = () => {
     } catch (e) {
       console.error("get_premium_stats threw:", e);
     }
+
+    if (statsErr) setError(statsErr);
     setLastUpdated(new Date());
     setDataLoading(false);
   }, []);
