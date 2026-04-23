@@ -660,7 +660,10 @@ const ChallengePage = () => {
                 </div>
                 <Button
                   className="w-full h-12 text-base font-medium gap-2"
-                  onClick={() => navigate("/auth?signup=1")}
+                  onClick={() => openSaveModal({
+                    title: "Save your progress ✨",
+                    subtitle: "You just finished a full session — let's keep your wins going. Create a free account to save your progress and come back anytime.",
+                  })}
                 >
                   <UserPlus className="w-5 h-5" />
                   {t('challenge.create.btn')}
@@ -771,7 +774,7 @@ const ChallengePage = () => {
               <Badge
                 variant="outline"
                 className="shrink-0 cursor-pointer border-primary/40 text-primary"
-                onClick={() => navigate("/auth?signup=1")}
+                onClick={() => openSaveModal()}
               >
                 <UserPlus className="w-3 h-3 mr-1" />
                 Save progress
