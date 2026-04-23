@@ -42,6 +42,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Dashboard
     'dash.greeting.sub':    'Small wins are still wins.',
     'dash.streak':          'Day streak',
+    'dash.tasks.done':      'Tasks done',
     'dash.points':          'Points',
     'dash.level':           'Level',
     'dash.pts.next':        'pts to next level',
@@ -150,6 +151,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Dashboard
     'dash.greeting.sub':    '小进步也是进步。',
     'dash.streak':          '连续天数',
+    'dash.tasks.done':      '已完成任务',
     'dash.points':          '积分',
     'dash.level':           '等级',
     'dash.pts.next':        '积分可升级',
