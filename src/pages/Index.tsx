@@ -239,7 +239,10 @@ const Index = () => {
         {/* Secondary CTA — KonMari Decision Coach */}
         <div
           className="bg-white rounded-2xl p-4 mb-5 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform border-2 border-primary/20 relative overflow-hidden"
-          onClick={() => navigate("/decide")}
+          onClick={() => {
+            analytics.premiumEntryClicked({ source: "home_card" });
+            navigate("/decide");
+          }}
           style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
         >
           <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">

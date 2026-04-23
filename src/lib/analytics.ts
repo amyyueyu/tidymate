@@ -97,4 +97,23 @@ export const analytics = {
   /** TODO: Remove after verifying PostHog integration */
   testEvent: () =>
     posthog.capture("posthog_test_event"),
+
+  // ─── Premium / KonMari Decision Coach ─────────────────────────────────────
+  premiumEntryClicked: (properties?: { source?: string }) =>
+    posthog.capture("premium_entry_clicked", properties),
+
+  decisionPhotoUploaded: (properties?: { intent?: string }) =>
+    posthog.capture("decision_photo_uploaded", properties),
+
+  decisionSessionStarted: (properties?: { intent?: string; item_count?: number }) =>
+    posthog.capture("decision_session_started", properties),
+
+  decisionMade: (properties?: { user_action?: string; ai_action?: string; accepted_ai?: boolean; category?: string }) =>
+    posthog.capture("decision_made", properties),
+
+  decisionSkipped: (properties?: { ai_action?: string; category?: string }) =>
+    posthog.capture("decision_skipped", properties),
+
+  decisionSessionCompleted: (properties?: { items_decided?: number; items_skipped?: number }) =>
+    posthog.capture("decision_session_completed", properties),
 };
