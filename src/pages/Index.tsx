@@ -60,7 +60,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      navigate("/landing", { replace: true });
     }
   }, [user, authLoading, navigate]);
 

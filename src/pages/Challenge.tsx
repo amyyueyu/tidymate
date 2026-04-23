@@ -34,6 +34,7 @@ import {
 const CIRCUMFERENCE = 2 * Math.PI * 70;
 
 import VisionComparison from "@/components/VisionComparison";
+import SaveProgressModal from "@/components/SaveProgressModal";
 import ProgressPhotoUpload from "@/components/ProgressPhotoUpload";
 import PraiseCard from "@/components/PraiseCard";
 import ShareCard from "@/components/ShareCard";
@@ -174,6 +175,14 @@ const ChallengePage = () => {
     badge: typeof LEVEL_BADGES[1];
   } | null>(null);
   const [showLevelUpShareCard, setShowLevelUpShareCard] = useState(false);
+
+  // Save-progress modal for guests at high-intent moments
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveModalCopy, setSaveModalCopy] = useState<{ title?: string; subtitle?: string }>({});
+  const openSaveModal = (copy?: { title?: string; subtitle?: string }) => {
+    setSaveModalCopy(copy ?? {});
+    setSaveModalOpen(true);
+  };
 
   // Refs to avoid stale closures in timer and to gate guest hydration
   const challengesRef = useRef<Challenge[]>([]);
@@ -651,7 +660,10 @@ const ChallengePage = () => {
                 </div>
                 <Button
                   className="w-full h-12 text-base font-medium gap-2"
-                  onClick={() => navigate("/auth?signup=1")}
+                  onClick={() => openSaveModal({
+                    title: "Save your progress ✨",
+                    subtitle: "You just finished a full session — let's keep your wins going. Create a free account to save your progress and come back anytime.",
+                  })}
                 >
                   <UserPlus className="w-5 h-5" />
                   {t('challenge.create.btn')}
@@ -749,7 +761,16 @@ const ChallengePage = () => {
       <header className="sticky top-0 z-10 bg-[#f5f4f0]/90 backdrop-blur-sm border-b border-border">
         <div className="container max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(isGuest ? "/auth" : "/")}>
+            <Button variant="ghost" size="icon" onClick={() => {
+              if (isGuest) {
+                openSaveModal({
+                  title: "Continue later? ✨",
+                  subtitle: "Create a free account to save this session and pick up exactly where you left off.",
+                });
+              } else {
+                navigate("/");
+              }
+            }}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1">
@@ -762,7 +783,7 @@ const ChallengePage = () => {
               <Badge
                 variant="outline"
                 className="shrink-0 cursor-pointer border-primary/40 text-primary"
-                onClick={() => navigate("/auth?signup=1")}
+                onClick={() => openSaveModal()}
               >
                 <UserPlus className="w-3 h-3 mr-1" />
                 Save progress
@@ -1052,7 +1073,16 @@ const ChallengePage = () => {
                 />
               ) : (
                 <button
-                  onClick={() => setShowProgressUpload(true)}
+                  onClick={() => {
+                    if (isGuest) {
+                      openSaveModal({
+                        title: "Save your photo ✨",
+                        subtitle: "Progress photos and bonus points are saved with a free account. Create one to keep this — and every future win.",
+                      });
+                      return;
+                    }
+                    setShowProgressUpload(true);
+                  }}
                   className="w-full h-12 flex items-center justify-center gap-2 rounded-2xl font-semibold text-sm bg-primary/10 text-primary border border-primary/25 hover:bg-primary/15 hover:border-primary/40 active:scale-95 transition-all duration-150 mt-1"
                 >
                   <Camera className="w-4 h-4" />
@@ -1181,6 +1211,13 @@ const ChallengePage = () => {
           </div>
         </div>
       )}
+
+      <SaveProgressModal
+        open={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        title={saveModalCopy.title}
+        subtitle={saveModalCopy.subtitle}
+      />
     </div>
   );
 };
