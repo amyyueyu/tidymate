@@ -158,6 +158,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'decide.done.title':       'Decisions made! 🎉',
     'decide.done.sub':         'You powered through {count} items. That\'s real momentum.',
     'decide.done.cta':         'Back to home',
+  },
 
   zh: {
     'lang.switch': 'English',
