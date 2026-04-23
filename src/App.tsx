@@ -12,6 +12,8 @@ import Capture from "./pages/Capture";
 import Challenge from "./pages/Challenge";
 import Demo from "./pages/Demo";
 import Stats from "./pages/Stats";
+import DecisionCapture from "./pages/DecisionCapture";
+import DecisionSession from "./pages/DecisionSession";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/challenge/:roomId" element={<Challenge />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/stats" element={<Stats />} />
+            <Route path="/decide" element={<DecisionCapture />} />
+            <Route path="/decide/:sessionId" element={<DecisionSession />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
