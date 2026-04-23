@@ -68,6 +68,7 @@ const Capture = () => {
     if (authLoading) return;
     const guestActive = sessionStorage.getItem("guestMode") === "true";
     if (!user && guestActive && sessionUsed && !analysisComplete) {
+      analytics.guestSignupPromptShown({ trigger: "session_used" });
       navigate("/auth?signup=1");
     }
   }, [user, authLoading, sessionUsed, analysisComplete, navigate]);
