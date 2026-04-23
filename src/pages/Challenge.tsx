@@ -34,6 +34,7 @@ import {
 const CIRCUMFERENCE = 2 * Math.PI * 70;
 
 import VisionComparison from "@/components/VisionComparison";
+import SaveProgressModal from "@/components/SaveProgressModal";
 import ProgressPhotoUpload from "@/components/ProgressPhotoUpload";
 import PraiseCard from "@/components/PraiseCard";
 import ShareCard from "@/components/ShareCard";
@@ -174,6 +175,14 @@ const ChallengePage = () => {
     badge: typeof LEVEL_BADGES[1];
   } | null>(null);
   const [showLevelUpShareCard, setShowLevelUpShareCard] = useState(false);
+
+  // Save-progress modal for guests at high-intent moments
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveModalCopy, setSaveModalCopy] = useState<{ title?: string; subtitle?: string }>({});
+  const openSaveModal = (copy?: { title?: string; subtitle?: string }) => {
+    setSaveModalCopy(copy ?? {});
+    setSaveModalOpen(true);
+  };
 
   // Refs to avoid stale closures in timer and to gate guest hydration
   const challengesRef = useRef<Challenge[]>([]);
