@@ -490,6 +490,142 @@ const Stats = () => {
           </div>
         </section>
 
+        {/* ── PREMIUM MODE: KonMari Decision Coach ── */}
+        <section>
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/0 border border-primary/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <CardTitle className="text-base font-semibold">Premium Mode — Decision Coach</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Funnel & feedback loop for the KonMari item-decision feature.
+                Entry-point clicks live in PostHog (event: <code className="bg-muted px-1 rounded">premium_entry_clicked</code>).
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {dataLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)}
+                </div>
+              ) : premium ? (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <StatCard
+                      icon={<Camera className="w-4 h-4" />}
+                      label="Photos Uploaded"
+                      value={premium.total_sessions}
+                      sub={`+${premium.sessions_7d} this week`}
+                      accent={premium.total_sessions > 0 ? "green" : "gray"}
+                    />
+                    <StatCard
+                      icon={<Users className="w-4 h-4" />}
+                      label="Unique Users"
+                      value={premium.unique_users_uploaded}
+                      sub={`${premium.users_with_multiple_sessions} repeat users`}
+                      accent={premium.unique_users_uploaded > 0 ? "green" : "gray"}
+                    />
+                    <StatCard
+                      icon={<Target className="w-4 h-4" />}
+                      label="Items Decided"
+                      value={premium.items_decided}
+                      sub={`${premium.items_skipped} skipped · ${premium.item_decision_rate ?? 0}% rate`}
+                      accent={getAccent(premium.item_decision_rate ?? 0, [60, 30])}
+                    />
+                    <StatCard
+                      icon={<ThumbsUp className="w-4 h-4" />}
+                      label="AI Acceptance"
+                      value={`${premium.ai_acceptance_rate ?? 0}%`}
+                      sub={`${premium.ai_accepted_count} accepted · ${premium.ai_overridden_count} overridden`}
+                      accent={getAccent(premium.ai_acceptance_rate ?? 0, [70, 40])}
+                    />
+                  </div>
+
+                  <div className="bg-card rounded-lg p-4 border border-border space-y-1">
+                    <div className="mb-2">
+                      <h3 className="text-sm font-semibold">Premium Funnel</h3>
+                      <p className="text-xs text-muted-foreground">From photo upload to completed decisions</p>
+                    </div>
+                    <FunnelStep label="Photo uploaded (session created)" value={premium.total_sessions} total={Math.max(premium.total_sessions, 1)} color="bg-primary" pctLabel="100%" />
+                    <DropArrow dropPct={premium.total_sessions > 0 && premium.total_items_detected === 0 ? 100 : 0} />
+                    <FunnelStep label="Items detected by AI" value={premium.total_items_detected} total={Math.max(premium.total_sessions, 1)} color="bg-green-500" pctLabel={`avg ${premium.avg_items_per_session ?? 0}/session`} />
+                    <DropArrow dropPct={premium.total_items_detected > 0 ? 100 - Math.round(((premium.items_decided + premium.items_skipped) / premium.total_items_detected) * 100) : 0} />
+                    <FunnelStep label="Items reviewed (decided or skipped)" value={premium.items_decided + premium.items_skipped} total={Math.max(premium.total_items_detected, 1)} color="bg-yellow-500" />
+                    <DropArrow dropPct={premium.total_items_detected > 0 ? 100 - Math.round((premium.items_decided / premium.total_items_detected) * 100) : 0} />
+                    <FunnelStep label="Items decided (not skipped)" value={premium.items_decided} total={Math.max(premium.total_items_detected, 1)} color="bg-orange-500" />
+                    <DropArrow dropPct={premium.total_sessions > 0 ? 100 - Math.round((premium.sessions_completed / premium.total_sessions) * 100) : 0} />
+                    <FunnelStep label="Sessions fully completed" value={premium.sessions_completed} total={Math.max(premium.total_sessions, 1)} color="bg-red-400" pctLabel={`${premium.sessions_completion_rate ?? 0}%`} />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-card rounded-lg p-4 border border-border">
+                      <h3 className="text-sm font-semibold mb-2">AI Suggested vs User Chose</h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Avg AI confidence: <strong>{premium.avg_ai_confidence ?? 0}</strong>
+                      </p>
+                      {(() => {
+                        const actions = ["keep", "donate", "sell", "recycle", "toss"];
+                        const aiMap = Object.fromEntries((premium.ai_action_distribution ?? []).map(d => [d.action, d.count]));
+                        const userMap = Object.fromEntries((premium.user_action_distribution ?? []).map(d => [d.action, d.count]));
+                        const data = actions.map(a => ({ action: a, AI: aiMap[a] ?? 0, User: userMap[a] ?? 0 }));
+                        const hasData = data.some(d => d.AI > 0 || d.User > 0);
+                        if (!hasData) return <p className="text-xs text-muted-foreground text-center py-6">No decisions yet</p>;
+                        return (
+                          <ResponsiveContainer width="100%" height={180}>
+                            <BarChart data={data}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis dataKey="action" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                              <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                              <Legend wrapperStyle={{ fontSize: 11 }} />
+                              <Bar dataKey="AI" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                              <Bar dataKey="User" fill="#0D9C6B" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="bg-card rounded-lg p-4 border border-border">
+                      <h3 className="text-sm font-semibold mb-2">Top Overridden Categories</h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Where users disagree with AI most — feedback signal for prompt tuning.
+                      </p>
+                      {premium.top_overridden_categories && premium.top_overridden_categories.length > 0 ? (
+                        <ul className="space-y-2">
+                          {premium.top_overridden_categories.map((c) => (
+                            <li key={c.category} className="flex items-center justify-between text-sm">
+                              <span className="capitalize text-foreground">{c.category}</span>
+                              <span className="font-mono font-medium text-amber-700 dark:text-amber-400">
+                                {c.overrides} overrides
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-muted-foreground text-center py-6">No overrides yet</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
+                    <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Entry-point clicks</strong> on the "Help me decide" home card are tracked in PostHog as{" "}
+                      <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">premium_entry_clicked</code>.
+                      Per-decision events:{" "}
+                      <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">decision_made</code> &{" "}
+                      <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">decision_skipped</code>.
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-6">No premium data yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
         {/* ── ROW 2: Activation metrics ── */}
         <section>
           <SectionTitle title="Activation Metrics" />
