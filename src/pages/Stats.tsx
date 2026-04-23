@@ -12,7 +12,7 @@ import {
 import {
   Leaf, ArrowLeft, RefreshCw, ShieldOff, ArrowDown,
   Users, Target, TrendingUp, Zap, Camera, Trophy,
-  AlertTriangle, Info, Sparkles, ThumbsUp,
+  AlertTriangle, Info, Sparkles, ThumbsUp, ExternalLink, UserPlus,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────
@@ -752,16 +752,7 @@ const Stats = () => {
                 </>
               ) : null}
 
-              {/* Guest mode callout */}
-              <div className="mt-4 flex gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
-                <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Guest mode funnel</strong> (try-before-signup flow) is tracked separately in PostHog.
-                  Key event: <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">session_started</code> where{" "}
-                  <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">is_guest = true</code>.
-                  Check PostHog for guest volume and guest → signup conversion rate.
-                </span>
-              </div>
+              {/* Guest mode reference — full Guest Mode dashboard is at the bottom */}
             </CardContent>
           </Card>
         </section>
@@ -978,29 +969,137 @@ const Stats = () => {
           </Card>
         </section>
 
-        {/* ── Guest Mode Callout ── */}
+        {/* ── GUEST MODE: try-before-signup funnel ── */}
         <section>
-          <div className="flex gap-3 p-4 bg-muted/40 border border-border rounded-lg text-sm text-muted-foreground">
-            <Info className="w-5 h-5 shrink-0 mt-0.5 text-primary" />
-            <div>
-              <p className="font-medium text-foreground mb-1">Guest Session Data</p>
-              <p>
-                Guest mode sessions live only in React context and sessionStorage — they are never written to the database.
-                View guest funnel, conversion rate, and session counts in your{" "}
-                <strong>PostHog dashboard</strong> at{" "}
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-50/60 to-amber-50/0 dark:from-amber-950/20 dark:to-transparent border border-amber-200/60 dark:border-amber-800/40">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <CardTitle className="text-base font-semibold">Guest Mode — Try Before Signup</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Guest sessions live in <code className="bg-muted px-1 rounded">sessionStorage</code> only and are never written to the DB,
+                so this funnel lives in PostHog. All events carry{" "}
+                <code className="bg-muted px-1 rounded">is_guest: true</code>.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Guest funnel reference */}
+              <div className="bg-card rounded-lg p-4 border border-border">
+                <h3 className="text-sm font-semibold mb-1">Guest Funnel</h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Filter each PostHog event below by <code className="bg-muted px-1 rounded">is_guest = true</code> to see volume and step-by-step drop-off.
+                </p>
+                <ol className="space-y-2 text-sm">
+                  {[
+                    { event: "guest_started", desc: "Tapped “Try as guest” on the landing or auth screen" },
+                    { event: "guest_photo_uploaded", desc: "Selected a room photo" },
+                    { event: "guest_analysis_completed", desc: "AI returned challenges — value moment" },
+                    { event: "task_completed", desc: "Completed at least one challenge (filter is_guest=true)" },
+                    { event: "guest_signup_prompt_shown", desc: "Saw the “Save your progress” modal" },
+                    { event: "guest_converted_to_signup", desc: "Clicked Continue with Google or Create account" },
+                    { event: "signup_completed", desc: "Account created (final conversion)" },
+                  ].map((step, i) => (
+                    <li key={step.event} className="flex items-start gap-3">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-[10px] font-bold flex items-center justify-center mt-0.5">
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <code className="bg-muted px-1.5 py-0.5 rounded text-[11px] font-mono">{step.event}</code>
+                        <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Key questions to answer */}
+              <div className="bg-card rounded-lg p-4 border border-border">
+                <h3 className="text-sm font-semibold mb-2">What to look for in PostHog</h3>
+                <ul className="space-y-2 text-xs text-muted-foreground list-disc pl-4">
+                  <li>
+                    <strong className="text-foreground">Guest volume:</strong>{" "}
+                    unique users firing <code className="bg-muted px-1 rounded">guest_started</code> per day / week.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Activation rate:</strong>{" "}
+                    <code className="bg-muted px-1 rounded">guest_analysis_completed</code> ÷{" "}
+                    <code className="bg-muted px-1 rounded">guest_started</code>. Below 50% = capture or AI is broken.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Conversion rate:</strong>{" "}
+                    <code className="bg-muted px-1 rounded">signup_completed</code> ÷{" "}
+                    <code className="bg-muted px-1 rounded">guest_started</code>. The headline number for the landing-page strategy.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Prompt → conversion:</strong>{" "}
+                    <code className="bg-muted px-1 rounded">guest_converted_to_signup</code> ÷{" "}
+                    <code className="bg-muted px-1 rounded">guest_signup_prompt_shown</code>.
+                    Tells you if the modal copy is working.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Drop-off step:</strong>{" "}
+                    build a Funnel insight in PostHog with the 7 events above to see exactly where guests leave.
+                  </li>
+                </ul>
+              </div>
+
+              {/* Cross-reference: signups in DB */}
+              {s && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <StatCard
+                    icon={<UserPlus className="w-4 h-4" />}
+                    label="New Signups (7d)"
+                    value={s.new_users_7d}
+                    sub="DB-confirmed conversions"
+                    accent="green"
+                  />
+                  <StatCard
+                    icon={<UserPlus className="w-4 h-4" />}
+                    label="New Signups (30d)"
+                    value={s.new_users_30d}
+                    sub="DB-confirmed conversions"
+                    accent="green"
+                  />
+                  <StatCard
+                    icon={<Users className="w-4 h-4" />}
+                    label="Total Users"
+                    value={s.total_signed_up_users}
+                    sub="all-time signups"
+                    accent="green"
+                  />
+                </div>
+              )}
+
+              {/* Deep links to PostHog */}
+              <div className="flex flex-wrap gap-2">
                 <a
-                  href="https://app.posthog.com"
+                  href="https://us.posthog.com/events?properties=%5B%7B%22type%22%3A%22event%22%2C%22key%22%3A%22is_guest%22%2C%22value%22%3A%5Btrue%5D%2C%22operator%22%3A%22exact%22%7D%5D"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline text-primary"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                 >
-                  app.posthog.com
-                </a>{" "}
-                under the <code className="bg-muted px-1 rounded">is_guest: true</code> filter.
+                  Open guest events in PostHog
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <a
+                  href="https://us.posthog.com/insights/new?insight=FUNNELS"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-muted/60 transition-colors"
+                >
+                  Build guest funnel insight
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              <p className="text-[11px] text-muted-foreground italic">
+                Tip: in PostHog, save the funnel as “Guest → Signup conversion” and pin it to your project dashboard so this number is one click away.
               </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </section>
+
       </main>
     </div>
   );

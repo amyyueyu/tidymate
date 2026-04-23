@@ -68,6 +68,7 @@ const Capture = () => {
     if (authLoading) return;
     const guestActive = sessionStorage.getItem("guestMode") === "true";
     if (!user && guestActive && sessionUsed && !analysisComplete) {
+      analytics.guestSignupPromptShown({ trigger: "session_used" });
       navigate("/auth?signup=1");
     }
   }, [user, authLoading, sessionUsed, analysisComplete, navigate]);
@@ -100,6 +101,7 @@ const Capture = () => {
         const compressed = await compressImage(raw);
         setImagePreview(compressed);
         analytics.photoUploaded({ room_type: intent });
+        if (isGuest) analytics.guestPhotoUploaded({ intent });
       };
       reader.readAsDataURL(file);
     }
@@ -183,6 +185,7 @@ const Capture = () => {
         markSessionUsed();
         setRoomId(guestId);
         setAnalysisComplete(true);
+        analytics.guestAnalysisCompleted({ intent, tasks_generated: challenges.length });
 
         // Generate vision in background for guest too
         generateVisionGuest(imagePreview, intent);

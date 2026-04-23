@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { analytics } from "@/lib/analytics";
 
 export interface GuestChallenge {
   id: string;
@@ -44,11 +45,15 @@ export const GuestModeProvider = ({ children }: { children: ReactNode }) => {
   const [sessionUsed, setSessionUsed] = useState(false);
 
   const startGuestMode = () => {
+    const wasGuest = sessionStorage.getItem("guestMode") === "true";
     setIsGuest(true);
     sessionStorage.setItem("guestMode", "true");
     setGuestRoom(null);
     setGuestChallenges([]);
     setSessionUsed(false);
+    if (!wasGuest) {
+      analytics.guestStarted();
+    }
   };
 
   const setGuestSession = (room: GuestRoom, challenges: GuestChallenge[]) => {
