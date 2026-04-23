@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GuestModeProvider } from "@/contexts/GuestModeContext";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Capture from "./pages/Capture";
@@ -23,6 +24,7 @@ const App = () => (
         <GuestModeProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/capture" element={<Capture />} />
             <Route path="/challenge/:roomId" element={<Challenge />} />
