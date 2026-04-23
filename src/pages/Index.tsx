@@ -10,6 +10,7 @@ import {
   ArrowRight,
   LogOut,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import { getBadgeForLevel } from "@/lib/levelBadges";
 import { LangToggle } from "@/components/LangToggle";
@@ -233,6 +234,31 @@ const Index = () => {
           <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center relative z-10">
             <ArrowRight className="w-4 h-4 text-white" />
           </div>
+        </div>
+
+        {/* Secondary CTA — KonMari Decision Coach */}
+        <div
+          className="bg-white rounded-2xl p-4 mb-5 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform border-2 border-primary/20 relative overflow-hidden"
+          onClick={() => navigate("/decide")}
+          style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
+        >
+          <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <HelpCircle className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className="font-extrabold text-gray-900 text-sm leading-tight">
+                {t('dash.decide.title')}
+              </p>
+              <span className="text-[9px] font-bold bg-primary text-white px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                New
+              </span>
+            </div>
+            <p className="text-gray-500 text-xs mt-0.5">
+              {t('dash.decide.sub')}
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
         </div>
 
         {/* Active challenges */}

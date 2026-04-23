@@ -100,6 +100,101 @@ export type Database = {
           },
         ]
       }
+      decision_items: {
+        Row: {
+          ai_rationale: string | null
+          ai_suggested_action: string
+          category: string | null
+          confidence: number | null
+          created_at: string
+          id: string
+          name: string
+          session_id: string
+          sort_order: number
+          status: string
+          user_action: string | null
+          user_action_at: string | null
+          user_id: string
+          visual_description: string | null
+        }
+        Insert: {
+          ai_rationale?: string | null
+          ai_suggested_action: string
+          category?: string | null
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          session_id: string
+          sort_order?: number
+          status?: string
+          user_action?: string | null
+          user_action_at?: string | null
+          user_id: string
+          visual_description?: string | null
+        }
+        Update: {
+          ai_rationale?: string | null
+          ai_suggested_action?: string
+          category?: string | null
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          session_id?: string
+          sort_order?: number
+          status?: string
+          user_action?: string | null
+          user_action_at?: string | null
+          user_id?: string
+          visual_description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "decision_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          decisions_completed: number
+          id: string
+          image_url: string
+          intent: string
+          item_count: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          decisions_completed?: number
+          id?: string
+          image_url: string
+          intent?: string
+          item_count?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          decisions_completed?: number
+          id?: string
+          image_url?: string
+          intent?: string
+          item_count?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -366,6 +461,14 @@ export type Database = {
       }
       complete_challenge_add_points: {
         Args: { p_challenge_id: string }
+        Returns: undefined
+      }
+      complete_decision_add_points: {
+        Args: {
+          p_accepted_ai: boolean
+          p_item_id: string
+          p_user_action: string
+        }
         Returns: undefined
       }
       delete_email: {
