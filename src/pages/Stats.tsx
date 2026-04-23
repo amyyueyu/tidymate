@@ -216,6 +216,7 @@ const Stats = () => {
 
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [stats, setStats] = useState<FullStats | null>(null);
+  const [premium, setPremium] = useState<PremiumStats | null>(null);
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -277,7 +278,16 @@ const Stats = () => {
       console.error("get_daily_activity_v2 threw:", e);
     }
 
-    if (statsErr) setError(statsErr);
+    try {
+      const { data, error: premiumErr } = await supabase.rpc("get_premium_stats" as never);
+      if (premiumErr) {
+        console.error("get_premium_stats failed:", premiumErr);
+      } else {
+        setPremium(data as PremiumStats);
+      }
+    } catch (e) {
+      console.error("get_premium_stats threw:", e);
+    }
     setLastUpdated(new Date());
     setDataLoading(false);
   }, []);
