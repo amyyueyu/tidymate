@@ -6,6 +6,8 @@ import { Camera, Leaf, Sparkles, ArrowRight } from "lucide-react";
 import { LangToggle } from "@/components/LangToggle";
 import { useLang } from "@/contexts/LanguageContext";
 import { analytics } from "@/lib/analytics";
+import beforeImg from "@/assets/before-room.jpg";
+import afterImg from "@/assets/after-room.jpg";
 
 const Landing = () => {
   const navigate = useNavigate();
