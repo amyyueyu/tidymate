@@ -53,6 +53,7 @@ const DecisionCapture = () => {
       const raw = ev.target?.result as string;
       const compressed = await compressImage(raw);
       setImagePreview(compressed);
+      analytics.decisionPhotoUploaded({ intent });
     };
     reader.readAsDataURL(file);
   };
@@ -130,7 +131,7 @@ const DecisionCapture = () => {
       const { error: itemsErr } = await supabase.from("decision_items").insert(rows);
       if (itemsErr) throw itemsErr;
 
-      analytics.testEvent(); // hook into existing analytics; no-op if not configured
+      analytics.decisionSessionStarted({ intent, item_count: items.length });
       toast.success(`Found ${items.length} item${items.length > 1 ? "s" : ""} to review!`);
       navigate(`/decide/${session.id}`);
     } catch (err: any) {
