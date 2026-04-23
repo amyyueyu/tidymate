@@ -18,6 +18,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { LangToggle } from "@/components/LangToggle";
+import { analytics } from "@/lib/analytics";
 import { useLang } from "@/contexts/LanguageContext";
 
 type Action = "keep" | "donate" | "sell" | "recycle" | "toss";
@@ -96,6 +97,10 @@ const DecisionSession = () => {
           .from("decision_items")
           .update({ status: "skipped", user_action_at: new Date().toISOString() })
           .eq("id", currentItem.id);
+        analytics.decisionSkipped({
+          ai_action: currentItem.ai_suggested_action,
+          category: currentItem.category ?? undefined,
+        });
       } else {
         const acceptedAi = action === currentItem.ai_suggested_action;
         const { error } = await supabase.rpc("complete_decision_add_points", {
@@ -104,6 +109,12 @@ const DecisionSession = () => {
           p_accepted_ai: acceptedAi,
         });
         if (error) throw error;
+        analytics.decisionMade({
+          user_action: action,
+          ai_action: currentItem.ai_suggested_action,
+          accepted_ai: acceptedAi,
+          category: currentItem.category ?? undefined,
+        });
         if (acceptedAi) {
           toast.success(`+7 pts · ${ACTION_META[action].label}`);
         } else {
@@ -133,6 +144,10 @@ const DecisionSession = () => {
       .from("decision_sessions")
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", session.id);
+    analytics.decisionSessionCompleted({
+      items_decided: items.filter((i) => i.status === "done").length,
+      items_skipped: items.filter((i) => i.status === "skipped").length,
+    });
     navigate("/");
   };
 
