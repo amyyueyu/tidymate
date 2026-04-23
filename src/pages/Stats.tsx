@@ -12,7 +12,7 @@ import {
 import {
   Leaf, ArrowLeft, RefreshCw, ShieldOff, ArrowDown,
   Users, Target, TrendingUp, Zap, Camera, Trophy,
-  AlertTriangle, Info,
+  AlertTriangle, Info, Sparkles, ThumbsUp,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────
@@ -53,6 +53,29 @@ type FullStats = {
   active_users_7d: number;
   active_users_30d: number;
   rate_limit_hits_7d: number;
+};
+
+type PremiumStats = {
+  total_sessions: number;
+  sessions_7d: number;
+  sessions_30d: number;
+  unique_users_uploaded: number;
+  sessions_by_intent: { intent: string; count: number }[] | null;
+  sessions_completed: number;
+  sessions_completion_rate: number | null;
+  avg_items_per_session: number | null;
+  total_items_detected: number;
+  items_decided: number;
+  items_skipped: number;
+  item_decision_rate: number | null;
+  ai_accepted_count: number;
+  ai_overridden_count: number;
+  ai_acceptance_rate: number | null;
+  ai_action_distribution: { action: string; count: number }[] | null;
+  user_action_distribution: { action: string; count: number }[] | null;
+  avg_ai_confidence: number | null;
+  users_with_multiple_sessions: number;
+  top_overridden_categories: { category: string; overrides: number }[] | null;
 };
 
 type DailyRow = {
