@@ -12,7 +12,7 @@ import {
 import {
   Leaf, ArrowLeft, RefreshCw, ShieldOff, ArrowDown,
   Users, Target, TrendingUp, Zap, Camera, Trophy,
-  AlertTriangle, Info, Sparkles, ThumbsUp,
+  AlertTriangle, Info, Sparkles, ThumbsUp, ExternalLink, UserPlus,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────
@@ -752,16 +752,7 @@ const Stats = () => {
                 </>
               ) : null}
 
-              {/* Guest mode callout */}
-              <div className="mt-4 flex gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
-                <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Guest mode funnel</strong> (try-before-signup flow) is tracked separately in PostHog.
-                  Key event: <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">session_started</code> where{" "}
-                  <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">is_guest = true</code>.
-                  Check PostHog for guest volume and guest → signup conversion rate.
-                </span>
-              </div>
+              {/* Guest mode reference — full Guest Mode dashboard is at the bottom */}
             </CardContent>
           </Card>
         </section>
