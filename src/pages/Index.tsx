@@ -59,11 +59,8 @@ const Index = () => {
     analytics.testEvent();
   }, []);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/landing", { replace: true });
-    }
-  }, [user, authLoading, navigate]);
+  // Unauthenticated visitors see the guest landing experience at "/"
+  // (no redirect, so tidymate.app keeps showing the new landing page)
 
   useEffect(() => {
     if (user) {
