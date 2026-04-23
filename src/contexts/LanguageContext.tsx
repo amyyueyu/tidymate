@@ -33,6 +33,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'landing.prop2':        'AI breaks it down',
     'landing.prop3':        'Tiny 5-min tasks',
     'landing.footer.account':'Already have an account?',
+    'landing.demo.title':   'See the transformation',
+    'landing.demo.before':  'Before',
+    'landing.demo.after':   'After',
 
     'auth.welcome':      'Welcome back',
     'auth.welcome.sub':  'Sign in to continue your journey',
