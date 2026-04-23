@@ -41,6 +41,7 @@ const Index = () => {
   const { t } = useLang();
   const [activeRooms, setActiveRooms] = useState<any[]>([]);
   const [roomsLoaded, setRoomsLoaded] = useState(false);
+  const [tasksCompleted, setTasksCompleted] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const greeting = useMemo(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)], []);
 
@@ -66,6 +67,7 @@ const Index = () => {
   useEffect(() => {
     if (user) {
       fetchActiveRooms();
+      fetchTasksCompleted();
     }
   }, [user]);
 
@@ -80,6 +82,15 @@ const Index = () => {
 
     if (data) setActiveRooms(data);
     setRoomsLoaded(true);
+  };
+
+  const fetchTasksCompleted = async () => {
+    const { count } = await supabase
+      .from("challenges")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user?.id)
+      .eq("status", "completed");
+    setTasksCompleted(count ?? 0);
   };
 
   useEffect(() => {
@@ -154,9 +165,9 @@ const Index = () => {
       {/* ── Floating Stat Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-2 mx-5 -mt-6 relative z-10">
         <div className="bg-white rounded-2xl p-3 text-center" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-          <span className="text-xl block mb-0.5">🔥</span>
-          <p className="font-black text-xl text-amber-500 leading-none">{profile.current_streak}</p>
-          <p className="text-[10px] text-gray-400 mt-0.5">{t('dash.streak')}</p>
+          <span className="text-xl block mb-0.5">✅</span>
+          <p className="font-black text-xl text-amber-500 leading-none">{tasksCompleted}</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{t('dash.tasks.done')}</p>
         </div>
         <div className="bg-white rounded-2xl p-3 text-center" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
           <span className="text-xl block mb-0.5">⭐</span>
