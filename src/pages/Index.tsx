@@ -14,6 +14,7 @@ import {
 import { getBadgeForLevel } from "@/lib/levelBadges";
 import { LangToggle } from "@/components/LangToggle";
 import { useLang } from "@/contexts/LanguageContext";
+import Landing from "./Landing";
 
 const GREETINGS = [
   "No pressure. Even 10 minutes counts.",
