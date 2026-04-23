@@ -116,4 +116,23 @@ export const analytics = {
 
   decisionSessionCompleted: (properties?: { items_decided?: number; items_skipped?: number }) =>
     posthog.capture("decision_session_completed", properties),
+
+  // ─── Guest Mode (try-before-signup) ───────────────────────────────────────
+  guestStarted: (properties?: { source?: string }) =>
+    posthog.capture("guest_started", { is_guest: true, ...properties }),
+
+  guestPhotoUploaded: (properties?: { intent?: string }) =>
+    posthog.capture("guest_photo_uploaded", { is_guest: true, ...properties }),
+
+  guestAnalysisCompleted: (properties?: { intent?: string; tasks_generated?: number }) =>
+    posthog.capture("guest_analysis_completed", { is_guest: true, ...properties }),
+
+  guestTaskCompleted: (properties?: { tasks_completed?: number; session_length?: number }) =>
+    posthog.capture("guest_task_completed", { is_guest: true, ...properties }),
+
+  guestSignupPromptShown: (properties?: { trigger?: "save_challenge" | "progress_photo" | "continue_later" | "view_history" | "session_used" | "other" }) =>
+    posthog.capture("guest_signup_prompt_shown", { is_guest: true, ...properties }),
+
+  guestConvertedToSignup: (properties?: { method?: "google" | "email" }) =>
+    posthog.capture("guest_converted_to_signup", properties),
 };

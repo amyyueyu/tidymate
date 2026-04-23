@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { analytics } from "@/lib/analytics";
 
 export interface GuestChallenge {
   id: string;
