@@ -13,7 +13,24 @@ import {
   Leaf, ArrowLeft, RefreshCw, ShieldOff, ArrowDown,
   Users, Target, TrendingUp, Zap, Camera, Trophy,
   AlertTriangle, Info, Sparkles, ThumbsUp, ExternalLink, UserPlus,
+  Repeat,
 } from "lucide-react";
+
+type RetentionStats = {
+  eligible_d1: number;
+  eligible_d7: number;
+  eligible_d30: number;
+  eligible_d90: number;
+  retained_d1: number;
+  retained_d7: number;
+  retained_d30: number;
+  retained_d90: number;
+  rate_d1: number | null;
+  rate_d7: number | null;
+  rate_d30: number | null;
+  rate_d90: number | null;
+  daily_cohorts: { cohort_date: string; cohort_size: number; d1_returned: number; d7_returned: number; d30_returned: number }[] | null;
+};
 
 /* ─────────────────────────────────────────────────────────
    TYPES
@@ -217,6 +234,7 @@ const Stats = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [stats, setStats] = useState<FullStats | null>(null);
   const [premium, setPremium] = useState<PremiumStats | null>(null);
+  const [retention, setRetention] = useState<RetentionStats | null>(null);
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -287,6 +305,17 @@ const Stats = () => {
       }
     } catch (e) {
       console.error("get_premium_stats threw:", e);
+    }
+
+    try {
+      const { data, error: retErr } = await supabase.rpc("get_retention_stats" as never);
+      if (retErr) {
+        console.error("get_retention_stats failed:", retErr);
+      } else {
+        setRetention(data as RetentionStats);
+      }
+    } catch (e) {
+      console.error("get_retention_stats threw:", e);
     }
 
     if (statsErr) setError(statsErr);
@@ -488,6 +517,86 @@ const Stats = () => {
               </>
             ) : null}
           </div>
+        </section>
+
+        {/* ── RETENTION: 1D / 7D / 30D / 90D ── */}
+        <section>
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50/60 to-indigo-50/0 dark:from-indigo-950/20 dark:to-transparent border border-indigo-200/60 dark:border-indigo-800/40">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Repeat className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <CardTitle className="text-base font-semibold">Retention — Unique Users</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                % of new signups who returned and took at least one action (started a room, completed a challenge, or used Premium) within the window after signup.
+                Only cohorts with enough elapsed time are counted in each rate.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {!retention ? (
+                <div className="text-sm text-muted-foreground">Loading retention…</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: "Day 1",  rate: retention.rate_d1,  retained: retention.retained_d1,  eligible: retention.eligible_d1 },
+                      { label: "Day 7",  rate: retention.rate_d7,  retained: retention.retained_d7,  eligible: retention.eligible_d7 },
+                      { label: "Day 30", rate: retention.rate_d30, retained: retention.retained_d30, eligible: retention.eligible_d30 },
+                      { label: "Day 90", rate: retention.rate_d90, retained: retention.retained_d90, eligible: retention.eligible_d90 },
+                    ].map((m) => (
+                      <div key={m.label} className="rounded-lg border border-border bg-background/60 p-4">
+                        <div className="text-xs text-muted-foreground">{m.label} retention</div>
+                        <div className="mt-1 text-2xl font-semibold tabular-nums">
+                          {m.rate == null ? "—" : `${m.rate}%`}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground tabular-nums">
+                          {m.retained.toLocaleString()} / {m.eligible.toLocaleString()} eligible
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {retention.daily_cohorts && retention.daily_cohorts.length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground mb-2">
+                        Daily cohort return rate (last 30 days)
+                      </div>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <LineChart
+                          data={retention.daily_cohorts.map((c) => ({
+                            date: new Date(c.cohort_date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+                            "D1 %":  c.cohort_size > 0 ? Math.round((c.d1_returned  / c.cohort_size) * 1000) / 10 : null,
+                            "D7 %":  c.cohort_size > 0 && c.d7_returned  >= 0 ? Math.round((c.d7_returned  / c.cohort_size) * 1000) / 10 : null,
+                            "D30 %": c.cohort_size > 0 && c.d30_returned >= 0 ? Math.round((c.d30_returned / c.cohort_size) * 1000) / 10 : null,
+                            cohort: c.cohort_size,
+                          }))}
+                          margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 11 }} unit="%" />
+                          <Tooltip
+                            formatter={(v: number | string) => (v == null ? "—" : `${v}%`)}
+                            labelFormatter={(l, p) => {
+                              const cohort = p?.[0]?.payload?.cohort;
+                              return `${l}${cohort != null ? ` · ${cohort} signups` : ""}`;
+                            }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Line type="monotone" dataKey="D1 %"  stroke="#6366f1" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="D7 %"  stroke="#0D9C6B" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="D30 %" stroke="#F59E0B" strokeWidth={2} dot={false} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Cohorts younger than the window (e.g. signed up 3 days ago for D7) appear as gaps.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </section>
 
         {/* ── PREMIUM MODE: KonMari Decision Coach ── */}

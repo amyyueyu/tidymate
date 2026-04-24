@@ -484,6 +484,7 @@ export type Database = {
       get_full_platform_stats: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
       get_premium_stats: { Args: never; Returns: Json }
+      get_retention_stats: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       move_to_dlq: {
         Args: {
