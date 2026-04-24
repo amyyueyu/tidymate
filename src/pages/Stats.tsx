@@ -234,6 +234,7 @@ const Stats = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [stats, setStats] = useState<FullStats | null>(null);
   const [premium, setPremium] = useState<PremiumStats | null>(null);
+  const [retention, setRetention] = useState<RetentionStats | null>(null);
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -304,6 +305,17 @@ const Stats = () => {
       }
     } catch (e) {
       console.error("get_premium_stats threw:", e);
+    }
+
+    try {
+      const { data, error: retErr } = await supabase.rpc("get_retention_stats" as never);
+      if (retErr) {
+        console.error("get_retention_stats failed:", retErr);
+      } else {
+        setRetention(data as RetentionStats);
+      }
+    } catch (e) {
+      console.error("get_retention_stats threw:", e);
     }
 
     if (statsErr) setError(statsErr);
