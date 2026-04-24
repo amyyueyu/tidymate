@@ -13,7 +13,24 @@ import {
   Leaf, ArrowLeft, RefreshCw, ShieldOff, ArrowDown,
   Users, Target, TrendingUp, Zap, Camera, Trophy,
   AlertTriangle, Info, Sparkles, ThumbsUp, ExternalLink, UserPlus,
+  Repeat,
 } from "lucide-react";
+
+type RetentionStats = {
+  eligible_d1: number;
+  eligible_d7: number;
+  eligible_d30: number;
+  eligible_d90: number;
+  retained_d1: number;
+  retained_d7: number;
+  retained_d30: number;
+  retained_d90: number;
+  rate_d1: number | null;
+  rate_d7: number | null;
+  rate_d30: number | null;
+  rate_d90: number | null;
+  daily_cohorts: { cohort_date: string; cohort_size: number; d1_returned: number; d7_returned: number; d30_returned: number }[] | null;
+};
 
 /* ─────────────────────────────────────────────────────────
    TYPES
