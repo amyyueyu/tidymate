@@ -247,6 +247,7 @@ const Stats = () => {
   const [stats, setStats] = useState<FullStats | null>(null);
   const [premium, setPremium] = useState<PremiumStats | null>(null);
   const [retention, setRetention] = useState<RetentionStats | null>(null);
+  const [activeUsers, setActiveUsers] = useState<ActiveUsersStats | null>(null);
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
