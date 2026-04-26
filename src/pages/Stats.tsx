@@ -331,6 +331,17 @@ const Stats = () => {
       console.error("get_retention_stats threw:", e);
     }
 
+    try {
+      const { data, error: auErr } = await supabase.rpc("get_active_users_stats" as never);
+      if (auErr) {
+        console.error("get_active_users_stats failed:", auErr);
+      } else {
+        setActiveUsers(data as ActiveUsersStats);
+      }
+    } catch (e) {
+      console.error("get_active_users_stats threw:", e);
+    }
+
     if (statsErr) setError(statsErr);
     setLastUpdated(new Date());
     setDataLoading(false);
