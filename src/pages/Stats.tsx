@@ -543,6 +543,120 @@ const Stats = () => {
           </div>
         </section>
 
+        {/* ── ACTIVE USERS: DAU / WAU / MAU ── */}
+        <section>
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-teal-50/60 to-teal-50/0 dark:from-teal-950/20 dark:to-transparent border border-teal-200/60 dark:border-teal-800/40">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <CardTitle className="text-base font-semibold">Active Users — DAU / WAU / MAU</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Unique users who took a meaningful action (started a room, completed a challenge, or used Premium) in the window.
+                DAU = today, WAU = trailing 7 days, MAU = trailing 30 days.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {!activeUsers ? (
+                <div className="text-sm text-muted-foreground">Loading active users…</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      {
+                        label: "DAU (today)",
+                        value: activeUsers.dau_today,
+                        sub: `Yesterday: ${activeUsers.dau_yesterday.toLocaleString()}`,
+                        delta: activeUsers.dau_today - activeUsers.dau_yesterday,
+                      },
+                      {
+                        label: "WAU (7d)",
+                        value: activeUsers.wau,
+                        sub: `Prev 7d: ${activeUsers.wau_prev.toLocaleString()}`,
+                        delta: activeUsers.wau - activeUsers.wau_prev,
+                      },
+                      {
+                        label: "MAU (30d)",
+                        value: activeUsers.mau,
+                        sub: `Prev 30d: ${activeUsers.mau_prev.toLocaleString()}`,
+                        delta: activeUsers.mau - activeUsers.mau_prev,
+                      },
+                    ].map((m) => (
+                      <div key={m.label} className="rounded-lg border border-border bg-background/60 p-4">
+                        <div className="text-xs text-muted-foreground">{m.label}</div>
+                        <div className="mt-1 text-2xl font-semibold tabular-nums">{m.value.toLocaleString()}</div>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+                          <span>{m.sub}</span>
+                          {m.delta !== 0 && (
+                            <span
+                              className={
+                                m.delta > 0
+                                  ? "text-green-600 dark:text-green-400 font-medium"
+                                  : "text-red-600 dark:text-red-400 font-medium"
+                              }
+                            >
+                              {m.delta > 0 ? "▲" : "▼"} {Math.abs(m.delta).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border bg-background/60 p-4">
+                      <div className="text-xs text-muted-foreground">Stickiness (DAU / MAU)</div>
+                      <div className="mt-1 text-2xl font-semibold tabular-nums">
+                        {activeUsers.stickiness_dau_mau == null ? "—" : `${activeUsers.stickiness_dau_mau}%`}
+                      </div>
+                      <div className="mt-1 text-[11px] text-muted-foreground">
+                        % of monthly users active today. Strong products: 20%+
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-border bg-background/60 p-4">
+                      <div className="text-xs text-muted-foreground">Stickiness (WAU / MAU)</div>
+                      <div className="mt-1 text-2xl font-semibold tabular-nums">
+                        {activeUsers.stickiness_wau_mau == null ? "—" : `${activeUsers.stickiness_wau_mau}%`}
+                      </div>
+                      <div className="mt-1 text-[11px] text-muted-foreground">
+                        % of monthly users active this week.
+                      </div>
+                    </div>
+                  </div>
+
+                  {activeUsers.daily_series && activeUsers.daily_series.length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground mb-2">
+                        Active users — last 30 days
+                      </div>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <LineChart
+                          data={activeUsers.daily_series.map((d) => ({
+                            date: new Date(d.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+                            DAU: d.dau,
+                            WAU: d.wau,
+                            MAU: d.mau,
+                          }))}
+                          margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                          <Tooltip />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Line type="monotone" dataKey="DAU" stroke="#0D9C6B" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="WAU" stroke="#6366f1" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="MAU" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
         {/* ── RETENTION: 1D / 7D / 30D / 90D ── */}
         <section>
           <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50/60 to-indigo-50/0 dark:from-indigo-950/20 dark:to-transparent border border-indigo-200/60 dark:border-indigo-800/40">
