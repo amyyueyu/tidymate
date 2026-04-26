@@ -13,8 +13,20 @@ import {
   Leaf, ArrowLeft, RefreshCw, ShieldOff, ArrowDown,
   Users, Target, TrendingUp, Zap, Camera, Trophy,
   AlertTriangle, Info, Sparkles, ThumbsUp, ExternalLink, UserPlus,
-  Repeat,
+  Repeat, Activity,
 } from "lucide-react";
+
+type ActiveUsersStats = {
+  dau_today: number;
+  dau_yesterday: number;
+  wau: number;
+  wau_prev: number;
+  mau: number;
+  mau_prev: number;
+  stickiness_dau_mau: number | null;
+  stickiness_wau_mau: number | null;
+  daily_series: { date: string; dau: number; wau: number; mau: number }[] | null;
+};
 
 type RetentionStats = {
   eligible_d1: number;
