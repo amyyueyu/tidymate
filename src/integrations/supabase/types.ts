@@ -479,6 +479,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_active_users_stats: { Args: never; Returns: Json }
       get_daily_activity: { Args: { p_days?: number }; Returns: Json }
       get_daily_activity_v2: { Args: { p_days?: number }; Returns: Json }
       get_full_platform_stats: { Args: never; Returns: Json }
