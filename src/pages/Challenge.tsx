@@ -40,6 +40,7 @@ import PraiseCard from "@/components/PraiseCard";
 import ShareCard from "@/components/ShareCard";
 import LevelUpShareCard from "@/components/LevelUpShareCard";
 import { getBadgeForLevel, LEVEL_BADGES } from "@/lib/levelBadges";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
