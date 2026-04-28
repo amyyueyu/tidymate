@@ -55,7 +55,7 @@ const Capture = () => {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     if (generatingVision) {
-      timer = setTimeout(() => setVisionLoadingTooLong(true), 15000);
+      timer = setTimeout(() => setVisionLoadingTooLong(true), 25000);
     } else {
       setVisionLoadingTooLong(false);
     }
@@ -241,7 +241,7 @@ const Capture = () => {
     }
   };
 
-  const VISION_TIMEOUT_MS = 30000;
+  const VISION_TIMEOUT_MS = 45000;
 
   // Authenticated vision generation (saves to DB)
   const generateVision = async (image: string, selectedIntent: string, currentRoomId: string) => {
@@ -506,6 +506,8 @@ const Capture = () => {
                       <img
                         src={visionImage}
                         alt="Your vision"
+                        loading="eager"
+                        decoding="async"
                         className="w-full aspect-[4/3] object-cover"
                       />
                       <div className="absolute bottom-3 right-3 bg-primary text-primary-foreground text-xs px-2 py-1 rounded flex items-center gap-1">

@@ -162,9 +162,45 @@ serve(async (req) => {
       throw new Error("No image generated");
     }
 
+    // Upload base64 -> storage so the client gets a small CDN URL (not a 2MB data URL).
+    // This dramatically reduces payload size, render lag, and DB row size.
+    let finalImageUrl = generatedImage;
+    try {
+      if (typeof generatedImage === "string" && generatedImage.startsWith("data:")) {
+        const match = generatedImage.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (match) {
+          const mime = match[1];
+          const ext = mime.split("/")[1] || "png";
+          const b64 = match[2];
+          const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          const folder = userId ?? "guest";
+          const fileName = `${folder}/vision-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+
+          const { error: uploadErr } = await supabaseAdmin.storage
+            .from("room-images")
+            .upload(fileName, bytes, {
+              contentType: mime,
+              cacheControl: "31536000",
+              upsert: false,
+            });
+
+          if (uploadErr) {
+            console.warn("Vision upload failed, falling back to data URL:", uploadErr);
+          } else {
+            const { data: pub } = supabaseAdmin.storage
+              .from("room-images")
+              .getPublicUrl(fileName);
+            if (pub?.publicUrl) finalImageUrl = pub.publicUrl;
+          }
+        }
+      }
+    } catch (uploadEx) {
+      console.warn("Vision upload exception, falling back to data URL:", uploadEx);
+    }
+
     return new Response(
       JSON.stringify({
-        imageUrl: generatedImage,
+        imageUrl: finalImageUrl,
         message: message || "Here's your vision for the transformed space!",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
