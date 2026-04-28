@@ -415,7 +415,7 @@ const Capture = () => {
               </div>
             ) : (
               <div
-                className="w-full aspect-[4/3] bg-muted flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-muted/80 transition-colors"
+                className="w-full aspect-[4/3] min-h-[200px] bg-muted flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-muted/80 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
