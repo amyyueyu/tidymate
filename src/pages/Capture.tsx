@@ -495,13 +495,27 @@ const Capture = () => {
               <Card className="border-0 shadow-lg overflow-hidden">
                 <CardContent className="p-0">
                   {generatingVision ? (
-                    <div className="aspect-[4/3] bg-muted flex items-center justify-center">
-                      <div className="text-center">
+                    <div className="aspect-[4/3] bg-muted flex items-center justify-center px-6">
+                      <div className="text-center w-full max-w-xs">
                         <Sparkles className="w-12 h-12 text-primary mx-auto mb-3 animate-pulse" />
                         <p className="font-medium">{t('capture.vision.loading')}</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           {t('capture.vision.sub')}
                         </p>
+
+                        {/* Simulated progress bar */}
+                        <div className="mt-5 space-y-1.5">
+                          <Progress value={visionProgress} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{visionProgress}%</span>
+                            <span>
+                              {visionProgress < 95
+                                ? "Rendering pixels…"
+                                : "Almost done…"}
+                            </span>
+                          </div>
+                        </div>
+
                         {visionLoadingTooLong && (
                           <div className="mt-4 space-y-2">
                             <p className="text-sm text-muted-foreground text-center">
