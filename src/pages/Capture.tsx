@@ -5,6 +5,7 @@ import { useGuestMode, GuestRoom, GuestChallenge } from "@/contexts/GuestModeCon
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
@@ -36,6 +37,7 @@ const Capture = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [generatingVision, setGeneratingVision] = useState(false);
   const [visionLoadingTooLong, setVisionLoadingTooLong] = useState(false);
+  const [visionProgress, setVisionProgress] = useState(0);
   const [visionImage, setVisionImage] = useState<string | null>(null);
   const [showVision, setShowVision] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
@@ -51,15 +53,36 @@ const Capture = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Show escape hatch after 15s of vision loading
+  // Show escape hatch after 25s; drive a simulated progress bar while vision is loading.
+  // Real progress isn't available (single opaque request), so we ease toward 95% over ~20s
+  // and snap to 100% when the image actually arrives.
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    if (generatingVision) {
-      timer = setTimeout(() => setVisionLoadingTooLong(true), 25000);
-    } else {
+    if (!generatingVision) {
       setVisionLoadingTooLong(false);
+      // If we just finished, briefly show 100% before resetting
+      setVisionProgress((p) => (p > 0 ? 100 : 0));
+      const reset = setTimeout(() => setVisionProgress(0), 600);
+      return () => clearTimeout(reset);
     }
-    return () => { if (timer) clearTimeout(timer); };
+
+    setVisionProgress(2);
+    const startedAt = Date.now();
+    const EXPECTED_MS = 20000; // typical Gemini Flash vision duration
+
+    const longTimer = setTimeout(() => setVisionLoadingTooLong(true), 25000);
+    const tick = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      // Ease-out curve toward 95%: fast start, slow tail
+      const ratio = Math.min(1, elapsed / EXPECTED_MS);
+      const eased = 1 - Math.pow(1 - ratio, 2);
+      const pct = Math.min(95, Math.round(eased * 95));
+      setVisionProgress((prev) => (pct > prev ? pct : prev));
+    }, 200);
+
+    return () => {
+      clearTimeout(longTimer);
+      clearInterval(tick);
+    };
   }, [generatingVision]);
 
   // If guest tries to start a second session (sessionUsed was set before this page loaded),
@@ -472,13 +495,27 @@ const Capture = () => {
               <Card className="border-0 shadow-lg overflow-hidden">
                 <CardContent className="p-0">
                   {generatingVision ? (
-                    <div className="aspect-[4/3] bg-muted flex items-center justify-center">
-                      <div className="text-center">
+                    <div className="aspect-[4/3] bg-muted flex items-center justify-center px-6">
+                      <div className="text-center w-full max-w-xs">
                         <Sparkles className="w-12 h-12 text-primary mx-auto mb-3 animate-pulse" />
                         <p className="font-medium">{t('capture.vision.loading')}</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           {t('capture.vision.sub')}
                         </p>
+
+                        {/* Simulated progress bar */}
+                        <div className="mt-5 space-y-1.5">
+                          <Progress value={visionProgress} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{visionProgress}%</span>
+                            <span>
+                              {visionProgress < 95
+                                ? "Rendering pixels…"
+                                : "Almost done…"}
+                            </span>
+                          </div>
+                        </div>
+
                         {visionLoadingTooLong && (
                           <div className="mt-4 space-y-2">
                             <p className="text-sm text-muted-foreground text-center">
