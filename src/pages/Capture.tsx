@@ -52,15 +52,36 @@ const Capture = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Show escape hatch after 15s of vision loading
+  // Show escape hatch after 25s; drive a simulated progress bar while vision is loading.
+  // Real progress isn't available (single opaque request), so we ease toward 95% over ~20s
+  // and snap to 100% when the image actually arrives.
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    if (generatingVision) {
-      timer = setTimeout(() => setVisionLoadingTooLong(true), 25000);
-    } else {
+    if (!generatingVision) {
       setVisionLoadingTooLong(false);
+      // If we just finished, briefly show 100% before resetting
+      setVisionProgress((p) => (p > 0 ? 100 : 0));
+      const reset = setTimeout(() => setVisionProgress(0), 600);
+      return () => clearTimeout(reset);
     }
-    return () => { if (timer) clearTimeout(timer); };
+
+    setVisionProgress(2);
+    const startedAt = Date.now();
+    const EXPECTED_MS = 20000; // typical Gemini Flash vision duration
+
+    const longTimer = setTimeout(() => setVisionLoadingTooLong(true), 25000);
+    const tick = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      // Ease-out curve toward 95%: fast start, slow tail
+      const ratio = Math.min(1, elapsed / EXPECTED_MS);
+      const eased = 1 - Math.pow(1 - ratio, 2);
+      const pct = Math.min(95, Math.round(eased * 95));
+      setVisionProgress((prev) => (pct > prev ? pct : prev));
+    }, 200);
+
+    return () => {
+      clearTimeout(longTimer);
+      clearInterval(tick);
+    };
   }, [generatingVision]);
 
   // If guest tries to start a second session (sessionUsed was set before this page loaded),
