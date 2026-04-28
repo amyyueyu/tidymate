@@ -170,6 +170,8 @@ const Capture = () => {
     setAnalysisComplete(false);
     setVisionImage(null);
     setShowVision(false);
+    setAutoRetryUsed(false);
+    setRetryCooldown(0);
 
     try {
       const response = await supabase.functions.invoke("analyze-room", {
