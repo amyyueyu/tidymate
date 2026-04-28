@@ -254,7 +254,8 @@ const Capture = () => {
         }
 
         setAnalysisComplete(true);
-        generateVision(imagePreview, intent, room.id);
+        // Small delay before vision call to avoid back-to-back bursts on the AI gateway (reduces 429s)
+        setTimeout(() => generateVision(imagePreview, intent, room.id), 800);
       }
 
       toast.success("Room analyzed! Let's start your challenges!");
