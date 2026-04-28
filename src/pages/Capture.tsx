@@ -241,7 +241,7 @@ const Capture = () => {
     }
   };
 
-  const VISION_TIMEOUT_MS = 30000;
+  const VISION_TIMEOUT_MS = 45000;
 
   // Authenticated vision generation (saves to DB)
   const generateVision = async (image: string, selectedIntent: string, currentRoomId: string) => {
