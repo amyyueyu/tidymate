@@ -150,6 +150,19 @@ const ChallengePage = () => {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [showPwaPrompt, setShowPwaPrompt] = useState(false);
 
+  // Trigger PWA install prompt once after first successful session completion
+  useEffect(() => {
+    if (!sessionComplete) return;
+    try {
+      if (typeof window !== "undefined" && localStorage.getItem("pwa_prompt_shown") !== "1") {
+        localStorage.setItem("pwa_prompt_shown", "1");
+        setShowPwaPrompt(true);
+      }
+    } catch {
+      /* noop */
+    }
+  }, [sessionComplete]);
+
   // Music state
   const [musicOn, setMusicOn] = useState(false);
   const [musicVibe, setMusicVibe] = useState("lofi focus");
