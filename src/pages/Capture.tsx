@@ -55,7 +55,7 @@ const Capture = () => {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     if (generatingVision) {
-      timer = setTimeout(() => setVisionLoadingTooLong(true), 15000);
+      timer = setTimeout(() => setVisionLoadingTooLong(true), 25000);
     } else {
       setVisionLoadingTooLong(false);
     }
