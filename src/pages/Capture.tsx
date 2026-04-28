@@ -266,7 +266,18 @@ const Capture = () => {
     }
   };
 
-  const VISION_TIMEOUT_MS = 45000;
+  const VISION_TIMEOUT_MS = 75000;
+
+  // Helper: trigger a retry-cooldown countdown so the manual button can't be spammed
+  const startRetryCooldown = (seconds: number) => {
+    setRetryCooldown(seconds);
+    const startedAt = Date.now();
+    const tick = setInterval(() => {
+      const remaining = Math.max(0, seconds - Math.floor((Date.now() - startedAt) / 1000));
+      setRetryCooldown(remaining);
+      if (remaining === 0) clearInterval(tick);
+    }, 250);
+  };
 
   // Authenticated vision generation (saves to DB)
   const generateVision = async (image: string, selectedIntent: string, currentRoomId: string) => {
@@ -283,13 +294,26 @@ const Capture = () => {
       );
       const response: InvokeResult = await Promise.race([invokePromise, timeoutPromise]);
 
-      // 429 or other soft errors: don't crash, just skip vision
+      // Soft errors (429 / busy / transient): don't crash, optionally auto-retry once
       if (response.error || (response.data as any)?.error) {
-        const msg = (response.data as any)?.error || response.error?.message || "";
-        if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("busy")) {
-          toast("Vision generation is busy right now — your challenges are ready! 🎉 Try viewing the vision later.");
+        const data = response.data as any;
+        const msg = data?.error || response.error?.message || "";
+        const retryable = data?.retryable === true || /rate limit|busy|429/i.test(msg);
+        if (retryable) {
+          toast("Vision is busy — we'll try once more for you in a moment.");
+          if (!autoRetryUsed) {
+            setAutoRetryUsed(true);
+            setGeneratingVision(false);
+            startRetryCooldown(5);
+            setTimeout(() => {
+              generateVision(image, selectedIntent, currentRoomId);
+            }, 5000);
+            return;
+          }
+          startRetryCooldown(3);
         } else {
-          toast("Couldn't generate vision, but your challenges are ready!");
+          toast("Couldn't generate vision this time — your challenges are ready!");
+          startRetryCooldown(3);
         }
         return;
       }
@@ -302,12 +326,13 @@ const Capture = () => {
       }
     } catch (error: any) {
       if (error?.message === "Vision generation timed out") {
-        console.warn("Vision generation timed out after 30s — falling back gracefully");
+        console.warn("Vision generation timed out — falling back gracefully");
         toast("Vision is taking too long — your challenges are ready! Try vision again later.");
       } else {
         console.error("Vision generation error:", error);
         toast("Couldn't generate vision, but your challenges are ready!");
       }
+      startRetryCooldown(3);
     } finally {
       setGeneratingVision(false);
     }
@@ -329,11 +354,24 @@ const Capture = () => {
       const response: InvokeResult = await Promise.race([invokePromise, timeoutPromise]);
 
       if (response.error || (response.data as any)?.error) {
-        const msg = (response.data as any)?.error || response.error?.message || "";
-        if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("busy")) {
-          toast("Vision generation is busy — your challenges are ready! Try again in a moment.");
+        const data = response.data as any;
+        const msg = data?.error || response.error?.message || "";
+        const retryable = data?.retryable === true || /rate limit|busy|429/i.test(msg);
+        if (retryable) {
+          toast("Vision is busy — we'll try once more for you in a moment.");
+          if (!autoRetryUsed) {
+            setAutoRetryUsed(true);
+            setGeneratingVision(false);
+            startRetryCooldown(5);
+            setTimeout(() => {
+              generateVisionGuest(image, selectedIntent);
+            }, 5000);
+            return;
+          }
+          startRetryCooldown(3);
         } else {
-          toast("Couldn't generate vision, but your challenges are ready!");
+          toast("Couldn't generate vision this time — your challenges are ready!");
+          startRetryCooldown(3);
         }
         return;
       }
@@ -345,12 +383,13 @@ const Capture = () => {
       }
     } catch (error: any) {
       if (error?.message === "Vision generation timed out") {
-        console.warn("Vision generation timed out after 30s — falling back gracefully");
+        console.warn("Vision generation timed out — falling back gracefully");
         toast("Vision is taking too long — your challenges are ready! Try vision again later.");
       } else {
         console.error("Vision generation error:", error);
         toast("Couldn't generate vision, but your challenges are ready!");
       }
+      startRetryCooldown(3);
     } finally {
       setGeneratingVision(false);
     }
