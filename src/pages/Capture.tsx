@@ -36,6 +36,7 @@ const Capture = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [generatingVision, setGeneratingVision] = useState(false);
   const [visionLoadingTooLong, setVisionLoadingTooLong] = useState(false);
+  const [visionProgress, setVisionProgress] = useState(0);
   const [visionImage, setVisionImage] = useState<string | null>(null);
   const [showVision, setShowVision] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
