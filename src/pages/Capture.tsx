@@ -506,6 +506,8 @@ const Capture = () => {
                       <img
                         src={visionImage}
                         alt="Your vision"
+                        loading="eager"
+                        decoding="async"
                         className="w-full aspect-[4/3] object-cover"
                       />
                       <div className="absolute bottom-3 right-3 bg-primary text-primary-foreground text-xs px-2 py-1 rounded flex items-center gap-1">
