@@ -42,6 +42,8 @@ const Capture = () => {
   const [showVision, setShowVision] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [retryCooldown, setRetryCooldown] = useState(0); // seconds remaining before manual retry enabled
+  const [autoRetryUsed, setAutoRetryUsed] = useState(false);
 
   // Auth guard — use sessionStorage as the authoritative source for guest status
   // to avoid React state race conditions on initial mount
@@ -168,6 +170,8 @@ const Capture = () => {
     setAnalysisComplete(false);
     setVisionImage(null);
     setShowVision(false);
+    setAutoRetryUsed(false);
+    setRetryCooldown(0);
 
     try {
       const response = await supabase.functions.invoke("analyze-room", {
@@ -210,8 +214,8 @@ const Capture = () => {
         setAnalysisComplete(true);
         analytics.guestAnalysisCompleted({ intent, tasks_generated: challenges.length });
 
-        // Generate vision in background for guest too
-        generateVisionGuest(imagePreview, intent);
+        // Generate vision in background for guest too — small delay to avoid hammering AI gateway
+        setTimeout(() => generateVisionGuest(imagePreview, intent), 800);
       } else {
         // Authenticated mode: upload image to storage first, then write to DB
         let beforeImageUrl = imagePreview;
@@ -252,7 +256,8 @@ const Capture = () => {
         }
 
         setAnalysisComplete(true);
-        generateVision(imagePreview, intent, room.id);
+        // Small delay before vision call to avoid back-to-back bursts on the AI gateway (reduces 429s)
+        setTimeout(() => generateVision(imagePreview, intent, room.id), 800);
       }
 
       toast.success("Room analyzed! Let's start your challenges!");
@@ -264,7 +269,18 @@ const Capture = () => {
     }
   };
 
-  const VISION_TIMEOUT_MS = 45000;
+  const VISION_TIMEOUT_MS = 75000;
+
+  // Helper: trigger a retry-cooldown countdown so the manual button can't be spammed
+  const startRetryCooldown = (seconds: number) => {
+    setRetryCooldown(seconds);
+    const startedAt = Date.now();
+    const tick = setInterval(() => {
+      const remaining = Math.max(0, seconds - Math.floor((Date.now() - startedAt) / 1000));
+      setRetryCooldown(remaining);
+      if (remaining === 0) clearInterval(tick);
+    }, 250);
+  };
 
   // Authenticated vision generation (saves to DB)
   const generateVision = async (image: string, selectedIntent: string, currentRoomId: string) => {
@@ -281,13 +297,26 @@ const Capture = () => {
       );
       const response: InvokeResult = await Promise.race([invokePromise, timeoutPromise]);
 
-      // 429 or other soft errors: don't crash, just skip vision
+      // Soft errors (429 / busy / transient): don't crash, optionally auto-retry once
       if (response.error || (response.data as any)?.error) {
-        const msg = (response.data as any)?.error || response.error?.message || "";
-        if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("busy")) {
-          toast("Vision generation is busy right now — your challenges are ready! 🎉 Try viewing the vision later.");
+        const data = response.data as any;
+        const msg = data?.error || response.error?.message || "";
+        const retryable = data?.retryable === true || /rate limit|busy|429/i.test(msg);
+        if (retryable) {
+          toast("Vision is busy — we'll try once more for you in a moment.");
+          if (!autoRetryUsed) {
+            setAutoRetryUsed(true);
+            setGeneratingVision(false);
+            startRetryCooldown(5);
+            setTimeout(() => {
+              generateVision(image, selectedIntent, currentRoomId);
+            }, 5000);
+            return;
+          }
+          startRetryCooldown(3);
         } else {
-          toast("Couldn't generate vision, but your challenges are ready!");
+          toast("Couldn't generate vision this time — your challenges are ready!");
+          startRetryCooldown(3);
         }
         return;
       }
@@ -300,12 +329,13 @@ const Capture = () => {
       }
     } catch (error: any) {
       if (error?.message === "Vision generation timed out") {
-        console.warn("Vision generation timed out after 30s — falling back gracefully");
+        console.warn("Vision generation timed out — falling back gracefully");
         toast("Vision is taking too long — your challenges are ready! Try vision again later.");
       } else {
         console.error("Vision generation error:", error);
         toast("Couldn't generate vision, but your challenges are ready!");
       }
+      startRetryCooldown(3);
     } finally {
       setGeneratingVision(false);
     }
@@ -327,11 +357,24 @@ const Capture = () => {
       const response: InvokeResult = await Promise.race([invokePromise, timeoutPromise]);
 
       if (response.error || (response.data as any)?.error) {
-        const msg = (response.data as any)?.error || response.error?.message || "";
-        if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("busy")) {
-          toast("Vision generation is busy — your challenges are ready! Try again in a moment.");
+        const data = response.data as any;
+        const msg = data?.error || response.error?.message || "";
+        const retryable = data?.retryable === true || /rate limit|busy|429/i.test(msg);
+        if (retryable) {
+          toast("Vision is busy — we'll try once more for you in a moment.");
+          if (!autoRetryUsed) {
+            setAutoRetryUsed(true);
+            setGeneratingVision(false);
+            startRetryCooldown(5);
+            setTimeout(() => {
+              generateVisionGuest(image, selectedIntent);
+            }, 5000);
+            return;
+          }
+          startRetryCooldown(3);
         } else {
-          toast("Couldn't generate vision, but your challenges are ready!");
+          toast("Couldn't generate vision this time — your challenges are ready!");
+          startRetryCooldown(3);
         }
         return;
       }
@@ -343,12 +386,13 @@ const Capture = () => {
       }
     } catch (error: any) {
       if (error?.message === "Vision generation timed out") {
-        console.warn("Vision generation timed out after 30s — falling back gracefully");
+        console.warn("Vision generation timed out — falling back gracefully");
         toast("Vision is taking too long — your challenges are ready! Try vision again later.");
       } else {
         console.error("Vision generation error:", error);
         toast("Couldn't generate vision, but your challenges are ready!");
       }
+      startRetryCooldown(3);
     } finally {
       setGeneratingVision(false);
     }
@@ -562,15 +606,20 @@ const Capture = () => {
               <Card className="border-0 shadow-sm">
                 <CardContent className="p-4 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Vision generation didn't complete.
+                    {autoRetryUsed
+                      ? "Vision generation didn't complete."
+                      : "Vision is taking a moment — you can try again."}
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={retryCooldown > 0}
                     onClick={() => {
                       if (imagePreview && roomId) {
                         setVisionImage(null);
                         setShowVision(true);
+                        // Manual retry resets the auto-retry budget so a future failure can auto-retry once again
+                        setAutoRetryUsed(false);
                         if (isGuest) {
                           generateVisionGuest(imagePreview, intent);
                         } else {
@@ -579,7 +628,7 @@ const Capture = () => {
                       }
                     }}
                   >
-                    Try again
+                    {retryCooldown > 0 ? `Try again in ${retryCooldown}s…` : "Try again"}
                   </Button>
                 </CardContent>
               </Card>

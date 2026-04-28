@@ -1,93 +1,53 @@
+# Fix: Vision image generation fails with "Vision generation didn't complete"
 
+## What's happening
 
-## Premium "KonMari Decision Coach" — Phased Plan
+Looking at the screenshot + edge function logs for `generate-vision`:
 
-A new Premium mode where users photograph individual items (or a pile) and AI tells them what to do with each one — keep, donate, recycle, sell, or toss — with a Marie Kondo–style rationale. Decisions captured become a feedback loop that personalizes future suggestions.
+```
+16:21:29  Generating vision for user ...
+16:21:36  Rate limited. Retrying in 3000ms (attempt 1)...
+16:21:45  Rate limited. Retrying in 7000ms (attempt 2)...
+```
 
-### What's feasible right now
+The Lovable AI gateway is returning **429 (rate limited)** for `google/gemini-3.1-flash-image-preview`. The current edge function only retries twice (3s + 7s backoff). If the third call also returns 429, the function bubbles up an error and the UI shows the "Vision generation didn't complete — Try again" card the user screenshotted.
 
-Everything in **Phase 1** is buildable today using infrastructure you already have: Lovable AI Gateway (multimodal Gemini), Supabase storage, edge functions, and your existing rate-limiting + RLS patterns. The KonMari analyzer is essentially a sibling of `analyze-room` with a different prompt and output schema.
+Compounding issues:
+1. `analyze-room` and `generate-vision` fire back-to-back against the same AI gateway, increasing 429 odds.
+2. Retry budget is too small (max 2 retries, ~10s of waiting).
+3. Client timeout of 45s sometimes triggers before the function finishes its retries on slow paths.
+4. The "Try again" button in the UI retries instantly — same 429 window, same failure.
+5. Even when generation eventually succeeds, the client may have already given up.
 
-**Payments / paywall** is feasible but requires enabling Lovable Payments (Stripe) — that's a separate one-click setup, not custom code.
+## Fix plan
 
-**Personalization "learning"** is feasible in two stages: simple aggregated preferences (Phase 2), then prompt-conditioned recommendations (Phase 3). True ML fine-tuning is out of scope for now.
+### 1. `supabase/functions/generate-vision/index.ts`
+- Increase retry budget on 429 from 2 → 4 attempts with stronger exponential backoff + jitter (e.g. 3s, 6s, 12s, 20s + random 0–1s). Total worst-case wait ~41s of backoff.
+- Also retry on **5xx** transient errors (502/503/504) with the same backoff curve, up to 2 attempts. The gateway occasionally bubbles upstream hiccups as 5xx.
+- On final failure, return a clear `retryable: true` flag in the JSON body alongside the `error` message so the client knows it's worth retrying.
 
----
+### 2. Spread the load: small delay before vision call
+- In `src/pages/Capture.tsx`, wait ~800ms after `analyze-room` succeeds before calling `generate-vision`. This avoids two simultaneous bursts to the same image model and noticeably reduces 429 rates.
 
-### Phase 1 — Core Decision Coach (MVP)
+### 3. Increase client timeout
+- Bump `VISION_TIMEOUT_MS` from 45000 → 75000 in `src/pages/Capture.tsx`. With the new server-side retries, the worst-case successful run is ~50–60s; 75s gives margin. Keep the 25s "this is taking longer than usual" hint and skip button — that already gives the user an out.
 
-**User flow**
-1. From homepage, tap new card "Help me decide" (Premium-gated; in Phase 1 we can soft-launch free to validate).
-2. Capture screen variant: "Photograph the items you're stuck on" (single item OR a pile).
-3. AI returns a list of detected items, each with: suggested action (Keep / Donate / Sell / Recycle / Toss), one-line rationale (KonMari "does it spark joy / serve a purpose"), and confidence.
-4. User swipes/taps each item: ✅ Did it · ✏️ Different action · ⏭️ Skip.
-5. Completion screen: count of decisions made, points earned, encouragement.
+### 4. Smarter "Try again" UX
+- In the retry card (`src/pages/Capture.tsx`), add a 3-second cooldown after a failed attempt before "Try again" becomes clickable, and auto-retry once in the background after 5s if the failure was a 429/busy. Show a small countdown in the button label ("Try again in 3s…").
+- When auto-retry succeeds, the existing success toast + image swap fires normally.
+- Cap auto-retries at 1 per session so we don't loop forever; after that the manual button stays available.
 
-**New edge function**: `analyze-items`
-- Multimodal call to `google/gemini-2.5-flash` with structured tool-calling output (no JSON parsing fragility).
-- System prompt grounded in KonMari principles: ask "does this spark joy or serve a clear purpose?", be decisive but kind, never shame the user, max 8 items per photo.
-- Returns: `{ items: [{ name, visual_description, suggested_action, rationale, category, confidence }] }`.
-- Same auth + rate-limit pattern as `analyze-room` (30/hr authed, 10/hr guest).
+### 5. Better error surfacing
+- If the final failure is a 429, the toast becomes: *"Vision is busy — we'll try once more for you in a moment."* Then the auto-retry kicks in.
+- If it's a non-retryable error (4xx other than 429, malformed response), show: *"Couldn't generate vision this time — your challenges are ready!"* and don't auto-retry.
 
-**New tables**
-- `decision_sessions` — `id, user_id, image_url, created_at, item_count, decisions_completed`
-- `decision_items` — `id, session_id, user_id, name, visual_description, ai_suggested_action, ai_rationale, category, user_action, user_action_at, status (pending|done|skipped)`
+## What does NOT change
+- `analyze-room` flow, prompt, or model.
+- Vision prompt content or model selection (`google/gemini-3.1-flash-image-preview`).
+- Storage bucket logic — generated images keep uploading to `room-images` and returning a CDN URL.
+- DB schema, RLS, rate-limit RPC, PostHog events, points/streaks, premium gating.
+- Guest mode flow.
 
-Both with RLS `auth.uid() = user_id`. Actions enum stored as text: `keep | donate | sell | recycle | toss`.
-
-**Points integration**
-- Each completed decision = 5 points; using AI suggestion = +2 bonus. Server-side RPC `complete_decision_add_points` mirroring `complete_challenge_add_points`.
-
-**New pages / components**
-- `src/pages/DecisionCapture.tsx` — photo upload + intent ("just one item" / "a pile")
-- `src/pages/DecisionSession.tsx` — swipeable item cards with action buttons
-- New homepage card "Help me decide" alongside the existing "Capture a space" CTA.
-
----
-
-### Phase 2 — Premium gating + payments
-
-- Enable **Lovable Payments (Stripe)** — recommended path, no account setup needed.
-- One product: "TidyMate Premium" (monthly + yearly).
-- New table `subscriptions` (or use Lovable Payments' built-in customer state).
-- Free tier: 3 decision sessions ever. Premium: unlimited.
-- Gate enforced in `analyze-items` edge function (server-side, never client).
-- `SaveProgressModal` pattern reused for the upgrade prompt at the limit.
-
----
-
-### Phase 3 — Feedback loop / personalization
-
-- After each user override of an AI suggestion, store the delta in a new `user_preferences` table (aggregated counters per category × action: e.g. "books → keep: 12, donate: 1").
-- The `analyze-items` function fetches the user's top patterns and injects them into the system prompt: *"This user tends to keep books and donate clothing — weight suggestions accordingly."*
-- Lightweight, no model training, immediate effect, fully reversible. Can iterate from there toward embeddings or a recommender if the data justifies it.
-
----
-
-### Out of scope (for now)
-
-- True ML fine-tuning on user data
-- Marketplace integrations (eBay, Poshmark) — link out instead
-- Local donation-center lookup — possible Phase 4 with a maps API
-- Item-level photo storage at scale (we'll keep one composite photo per session, not per item, to keep storage cheap)
-
----
-
-### Technical notes
-
-- Use Gemini's tool-calling for structured output (already documented in your AI gateway context) — more reliable than the regex JSON parsing currently in `analyze-room`.
-- KonMari prompt must be carefully tuned: decisive but never dismissive, culturally aware (some users keep heirlooms regardless of "joy").
-- Keep the same image compression pipeline (1024px / 0.82 JPEG) from `Capture.tsx`.
-- New i18n keys for English + Chinese in `LanguageContext.tsx`.
-- Analytics events: `decision_session_started`, `decision_made`, `ai_suggestion_accepted`, `ai_suggestion_overridden`.
-
----
-
-### What I'd build first if you approve
-
-Phase 1 only — ship it free to a small set of users, validate that the suggestions feel useful, *then* add the paywall (Phase 2) and personalization (Phase 3). This keeps the first release small, lets us tune the prompt against real photos, and avoids charging before the product proves itself.
-
-Two questions before I start:
-1. **Single item vs. pile per photo** — support both in v1, or start with single-item only (simpler UI, sharper AI accuracy)?
-2. **Free trial size** — 3 free sessions before paywall, or unlimited free in v1 and add paywall in Phase 2?
-
+## Files touched
+- `supabase/functions/generate-vision/index.ts` — beefier retry/backoff, retryable flag in error responses.
+- `src/pages/Capture.tsx` — 800ms pre-vision delay, 75s timeout, smarter "Try again" card with cooldown + one auto-retry on 429.
