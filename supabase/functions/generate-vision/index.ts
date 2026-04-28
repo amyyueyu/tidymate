@@ -163,19 +163,31 @@ serve(async (req) => {
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Vision generation is busy right now. Your challenges are ready — try generating the vision again in a moment." }),
+          JSON.stringify({
+            error: "Vision generation is busy right now. Your challenges are ready — try again in a moment.",
+            retryable: true,
+            reason: "rate_limited",
+          }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits depleted. Please add more credits." }),
+          JSON.stringify({ error: "AI credits depleted. Please add more credits.", retryable: false, reason: "payment_required" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status} — ${errorText}`);
+      const isTransient = response.status >= 500 && response.status < 600;
+      return new Response(
+        JSON.stringify({
+          error: `AI gateway error: ${response.status}`,
+          retryable: isTransient,
+          reason: isTransient ? "transient_upstream" : "upstream_error",
+        }),
+        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const data = await response.json();
