@@ -212,8 +212,8 @@ const Capture = () => {
         setAnalysisComplete(true);
         analytics.guestAnalysisCompleted({ intent, tasks_generated: challenges.length });
 
-        // Generate vision in background for guest too
-        generateVisionGuest(imagePreview, intent);
+        // Generate vision in background for guest too — small delay to avoid hammering AI gateway
+        setTimeout(() => generateVisionGuest(imagePreview, intent), 800);
       } else {
         // Authenticated mode: upload image to storage first, then write to DB
         let beforeImageUrl = imagePreview;
