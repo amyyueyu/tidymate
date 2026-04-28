@@ -625,8 +625,18 @@ const ChallengePage = () => {
       fastestChallenge.actual_seconds != null &&
       fastestChallenge.actual_seconds < fastestChallenge.time_estimate_minutes * 60 * 0.6;
 
+    // Show PWA install prompt only once after first session completion
+    let showPwaPrompt = false;
+    try {
+      if (typeof window !== "undefined" && localStorage.getItem("pwa_prompt_shown") !== "1") {
+        showPwaPrompt = true;
+        localStorage.setItem("pwa_prompt_shown", "1");
+      }
+    } catch { /* noop */ }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        {showPwaPrompt && <PWAInstallPrompt />}
         <div className="text-center max-w-sm w-full space-y-6">
           <div className="animate-fade-in">
             <Trophy className="w-16 h-16 text-primary mx-auto mb-4" />
