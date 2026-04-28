@@ -606,15 +606,20 @@ const Capture = () => {
               <Card className="border-0 shadow-sm">
                 <CardContent className="p-4 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Vision generation didn't complete.
+                    {autoRetryUsed
+                      ? "Vision generation didn't complete."
+                      : "Vision is taking a moment — you can try again."}
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={retryCooldown > 0}
                     onClick={() => {
                       if (imagePreview && roomId) {
                         setVisionImage(null);
                         setShowVision(true);
+                        // Manual retry resets the auto-retry budget so a future failure can auto-retry once again
+                        setAutoRetryUsed(false);
                         if (isGuest) {
                           generateVisionGuest(imagePreview, intent);
                         } else {
@@ -623,7 +628,7 @@ const Capture = () => {
                       }
                     }}
                   >
-                    Try again
+                    {retryCooldown > 0 ? `Try again in ${retryCooldown}s…` : "Try again"}
                   </Button>
                 </CardContent>
               </Card>
