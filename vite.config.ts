@@ -18,32 +18,43 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icon-192.png", "icon-512.png"],
-      workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+      // Disable in dev so SW never activates inside the Lovable preview iframe
+      devOptions: {
+        enabled: false,
       },
+      includeAssets: [
+        "favicon.ico",
+        "apple-touch-icon.png",
+        "icon-192.png",
+        "icon-512.png",
+      ],
       manifest: {
         name: "TidyMate",
         short_name: "TidyMate",
-        description: "AI decluttering companion for ADHD",
-        theme_color: "#0D9C6B",
-        background_color: "#f5f4f0",
+        description: "Turns out we don't hate cleaning. We hate starting.",
+        theme_color: "#4a7c59",
+        background_color: "#ffffff",
         display: "standalone",
-        start_url: "/",
         orientation: "portrait",
+        scope: "/",
+        start_url: "/",
         icons: [
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      },
+      workbox: {
+        navigateFallbackDenylist: [/^\/~oauth/],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        runtimeCaching: [
           {
-            src: "/icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-          {
-            src: "/icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-cache",
+              expiration: { maxEntries: 50, maxAgeSeconds: 300 },
+            },
           },
         ],
       },
@@ -56,4 +67,3 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
 }));
-

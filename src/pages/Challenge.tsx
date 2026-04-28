@@ -40,6 +40,7 @@ import PraiseCard from "@/components/PraiseCard";
 import ShareCard from "@/components/ShareCard";
 import LevelUpShareCard from "@/components/LevelUpShareCard";
 import { getBadgeForLevel, LEVEL_BADGES } from "@/lib/levelBadges";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
@@ -147,6 +148,20 @@ const ChallengePage = () => {
   const [loading, setLoading] = useState(true);
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [showPwaPrompt, setShowPwaPrompt] = useState(false);
+
+  // Trigger PWA install prompt once after first successful session completion
+  useEffect(() => {
+    if (!sessionComplete) return;
+    try {
+      if (typeof window !== "undefined" && localStorage.getItem("pwa_prompt_shown") !== "1") {
+        localStorage.setItem("pwa_prompt_shown", "1");
+        setShowPwaPrompt(true);
+      }
+    } catch {
+      /* noop */
+    }
+  }, [sessionComplete]);
 
   // Music state
   const [musicOn, setMusicOn] = useState(false);
@@ -626,6 +641,7 @@ const ChallengePage = () => {
 
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        {showPwaPrompt && <PWAInstallPrompt />}
         <div className="text-center max-w-sm w-full space-y-6">
           <div className="animate-fade-in">
             <Trophy className="w-16 h-16 text-primary mx-auto mb-4" />

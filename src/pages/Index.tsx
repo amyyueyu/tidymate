@@ -167,14 +167,14 @@ const Index = () => {
         </div>
 
         {/* Greeting */}
-        <h1 className="font-black text-white text-3xl leading-tight mb-1 relative z-10">
+        <h1 className="font-black text-white text-2xl sm:text-3xl leading-tight mb-1 relative z-10">
           Hey, {displayName}! 👋
         </h1>
         <p className="text-white/70 text-sm relative z-10">{t('dash.greeting.sub')}</p>
       </div>
 
       {/* ── Floating Stat Cards ──────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-2 mx-5 -mt-6 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mx-5 -mt-6 relative z-10">
         <div className="bg-white rounded-2xl p-3 text-center" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
           <span className="text-xl block mb-0.5">✅</span>
           <p className="font-black text-xl text-amber-500 leading-none">{tasksCompleted}</p>
