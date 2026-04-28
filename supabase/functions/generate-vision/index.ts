@@ -16,7 +16,17 @@ const WINDOW_SECONDS = 3600;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function callVisionAPI(imageUrl: string, apiKey: string, attempt = 0): Promise<Response> {
+// Backoff schedule (ms) for retryable failures (429 + transient 5xx). Includes jitter on top.
+// Total worst-case wait ~ 3+6+12+20 = 41s of backoff across 4 retries.
+const RETRY_BACKOFFS_MS = [3000, 6000, 12000, 20000];
+const MAX_5XX_RETRIES = 2;
+
+async function callVisionAPI(
+  imageUrl: string,
+  apiKey: string,
+  attempt = 0,
+  fiveXxRetries = 0
+): Promise<Response> {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -38,11 +48,26 @@ async function callVisionAPI(imageUrl: string, apiKey: string, attempt = 0): Pro
     }),
   });
 
-  if (response.status === 429 && attempt < 2) {
-    const delay = (attempt + 1) * 3000 + attempt * 1000;
-    console.log(`Rate limited. Retrying in ${delay}ms (attempt ${attempt + 1})...`);
+  // Retry 429 with exponential backoff + jitter, up to 4 attempts
+  if (response.status === 429 && attempt < RETRY_BACKOFFS_MS.length) {
+    const jitter = Math.floor(Math.random() * 1000);
+    const delay = RETRY_BACKOFFS_MS[attempt] + jitter;
+    console.log(`Rate limited (429). Retrying in ${delay}ms (attempt ${attempt + 1}/${RETRY_BACKOFFS_MS.length})...`);
     await sleep(delay);
-    return callVisionAPI(imageUrl, apiKey, attempt + 1);
+    return callVisionAPI(imageUrl, apiKey, attempt + 1, fiveXxRetries);
+  }
+
+  // Retry transient 5xx (502/503/504) up to MAX_5XX_RETRIES times, reusing backoff curve
+  if (
+    (response.status === 502 || response.status === 503 || response.status === 504) &&
+    fiveXxRetries < MAX_5XX_RETRIES
+  ) {
+    const idx = Math.min(fiveXxRetries, RETRY_BACKOFFS_MS.length - 1);
+    const jitter = Math.floor(Math.random() * 1000);
+    const delay = RETRY_BACKOFFS_MS[idx] + jitter;
+    console.log(`Transient ${response.status}. Retrying in ${delay}ms (5xx attempt ${fiveXxRetries + 1}/${MAX_5XX_RETRIES})...`);
+    await sleep(delay);
+    return callVisionAPI(imageUrl, apiKey, attempt, fiveXxRetries + 1);
   }
 
   return response;
