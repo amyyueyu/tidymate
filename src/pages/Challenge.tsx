@@ -148,6 +148,7 @@ const ChallengePage = () => {
   const [loading, setLoading] = useState(true);
   const [showVision, setShowVision] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [showPwaPrompt, setShowPwaPrompt] = useState(false);
 
   // Music state
   const [musicOn, setMusicOn] = useState(false);
