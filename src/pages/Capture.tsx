@@ -42,6 +42,8 @@ const Capture = () => {
   const [showVision, setShowVision] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [retryCooldown, setRetryCooldown] = useState(0); // seconds remaining before manual retry enabled
+  const [autoRetryUsed, setAutoRetryUsed] = useState(false);
 
   // Auth guard — use sessionStorage as the authoritative source for guest status
   // to avoid React state race conditions on initial mount
